@@ -1,54 +1,84 @@
-## Problem statements and Target User
-People who use sign language may face communication difficulties when interacting with people who do not understand sign language. In situations such as schools, workplaces, hospitals, shops, and public services, the lack of a common communication method can make conversations slower and more difficult.
+# AI Recipe Planner 
 
-Our application uses Artificial Intelligence and computer vision to identify sign language motions via a camera and instantly translate them into textual subtitles. This allows people who do not understand sign language to read the translated message on the application. 
+## Problem statement
+People often have ingredients in their refrigerator but are unsure what meals they can prepare with them. This can lead to **food waste, unnecessary grocery purchases, and difficulty deciding what to cook.**
+
+Our application aims to solve this problem by allowing users to enter the ingredients they currently have in their refrigerator. The AI will analyse the available ingredients and generate a list of meal suggestions and recipes based on what the user already has. 
+
+## Target Users
+
+#### Target users include:
+
+- Students and young adults who want simple meal ideas.
+- Families who want to use ingredients before they expire.
+- People who want to reduce food waste.
+- Users who are unsure what to cook with their available ingredients.
+
 
 ## User Inputs
-The main input will be video captured through the device's camera.
-Users will perform sign-language gestures in front of the camera. The system will process information such as:
-- Hand position and movement
-- Hand shape
-- Finger positions
-- Sequence of gestures (to ensure whatever was signed is understandable to the person on the receiving end)
 
-For example:
-**Camera Input → Sign Language Gestures → AI Processing → Text Subtitle**
+Users will provide information about the ingredients available in their refrigerator such as:
 
-### Considerations
-A key project consideration is that sign languages are different from one another. Therefore, the project would be focused solely on **Singapore Sign Language (SgSL)**, rather than attempting to recognise every sign language.
+- Ingredients
+- Quantity available (Mass of item (g), Volume of liquid (ml))
+- Dietary preferences
+- Serving Size Pax
+- Available cooking equipment
 
-Another consideration would be that the hand signs shown are in an environment with ample lighting (such that the hand sign shown is clear and visible)
+*More will be added based on availability and time and resources to scale the project, if relevant.*
+
+### User Input Format
+
+As of now, it will be plain string input based on **Command Line Interface (CLI)**. Depending on time and resources, it may be scaled to a more advanced and convenient method of input.
+
 
 ## Use of AI
-AI will be used primarily for computer vision and gesture recognition. The camera captures the user's movements, and an AI model analyses the video frames to identify the signs being performed.
 
-The system could use a machine-learning/deep-learning model trained using sign-language video or image datasets.
-The general process will be:
+AI will analyse the user's inputs and determine suitable meals that can be prepared.
 
-**Capture**: The camera records the user's signing.
+#### The process would be:
 
-**Detection**: The system identifies the user's hand movements.
+Input (User Ingredients) → AI analyzes ingredients -> AI Generates Possible Meal Recipes → Does Recipe Match User Requirements?
 
-**Feature Extraction**: Important characteristics such as hand position, shape, and movement are extracted.
+ **If**:
 
-**AI Recognition**: The trained AI model predicts the sign or sequence of signs.
+ Yes → Display Recipe
 
-**Language Processing**: Recognised signs are converted into understandable words.
+ No → Generate Another Recommendation
 
-**Subtitle Generation**: The translated words are displayed on the screen.
+For example:
 
-**Data Persistence**: The translated words are logged onto a database in relation to each sign detected.
+**Available Ingredients**: Chicken + rice + egg + carrot + onion
 
-**Data Loading**: Previous data are used together with current detection to boost detection confidence.
+**AI Recommendation**: Chicken Fried Rice
+
+#### Instructions:
+
+Cook the chicken.
+
+Fry the onions and carrots.
+
+Add rice and mix.
+
+Add the chicken and egg.
+
+Season and serve.
 
 
 ## Business Rules
 
-### Sign Validity
-A recognised sign is only accepted as valid if, the AI confidence score and the same predicted sign 	appears consistently across the frames. If it fails, the application flags the segment and displays eg. “Please repeat the sign” instead of a subtitle.
+The application will apply rules to ensure that the AI's recommendations are practical and safe.
 
-### Supported signs/vocabulary checks
-If the predicted sign label fails outside the trained dataset’s label set, the application rejects it rather than guessing the closest match, and prompts the user to repeat or use a supported sign.
+### Validation Rules
 
-### Sentence processing/assembly
-Accepted signs are added to the end of the output sentence in the order they were made. The system does not change the order or guess grammar rules beyond basic punctuation and capitalisation, keeping the user's original meaning.
+#### Ingredient availability
+The AI should only recommend meals using ingredients that the user has or clearly identify additional ingredients that need to be purchased.
+
+#### Allergy restrictions
+The system must exclude ingredients that conflict with the user's stated allergies.
+
+#### Dietary restrictions
+Recommendations should follow the user's selected dietary requirements.
+
+#### Cooking time
+Recipes should match the user's maximum cooking-time preference where possible.
