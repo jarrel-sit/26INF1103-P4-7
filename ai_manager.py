@@ -3,6 +3,7 @@ from google import genai
 from google.genai import errors
 from dotenv import load_dotenv
 import os
+import json
 
 # --- Load Environment Variables --- #
 load_dotenv(dotenv_path="./.env")
@@ -61,3 +62,23 @@ def call_api(prompt: str = ""):
     except Exception as e:
         # Catches network drops or client-side issues outside the stream loop
         return f"\nTransport or connection exception: {e}"
+
+
+def parse_response(response: str):
+    """
+    Function to parse the response from the API.
+    """
+
+    if not response:
+        return "No response received from the API."
+
+    # Check for markdown formatting issues in the response, and fix them if necessary
+    if response.startswith("```") or response.endswith("```"):
+        response = response.strip("```").strip()
+
+    # Parse the response as JSON and handle any parsing errors
+    try:
+        return json.loads(response)
+
+    except json.JSONDecodeError as e:
+        return f"JSON parsing error: {e} \nResponse content: {response}"
