@@ -12,6 +12,12 @@ API_KEY = os.getenv("GENAI_API_KEY")
 
 # --- Constants --- #
 CLIENT = genai.Client(api_key=API_KEY)
+REQUIRED_KEYS = [
+    "recipe",
+    "ingredients",
+    "instructions",
+    "confidence",
+]  # placeholder for now, to be updated with actual input from user if necessary
 RESPONSE_FORMAT = {
     "type": "text",
     "mime_type": "application/json",
@@ -64,21 +70,71 @@ def call_api(prompt: str = ""):
         return f"\nTransport or connection exception: {e}"
 
 
-def parse_response(response: str):
+def parse_response(raw: str):
     """
     Function to parse the response from the API.
     """
 
-    if not response:
+    if not raw:
         return "No response received from the API."
 
     # Check for markdown formatting issues in the response, and fix them if necessary
-    if response.startswith("```") or response.endswith("```"):
-        response = response.strip("```").strip()
+    if raw.startswith("```") or raw.endswith("```"):
+        raw = raw.strip("```").strip()
 
     # Parse the response as JSON and handle any parsing errors
     try:
-        return json.loads(response)
+        return json.loads(raw)
 
     except json.JSONDecodeError as e:
-        return f"JSON parsing error: {e} \nResponse content: {response}"
+        return f"JSON parsing error: {e} \nResponse content: {raw}"
+
+
+def validate_response(data: dict):
+    """
+    Function to validate the parsed response from the API.
+    """
+
+    # Validate that the parsed response is a dictionary and contains all required keys
+    if not isinstance(data, dict):
+        return "Parsed response is not a dictionary."
+
+    missing_keys = [key for key in REQUIRED_KEYS if key not in data]
+
+    if missing_keys:
+        return f"Missing keys in the response: {', '.join(missing_keys)}"
+
+    # Validate each required key for presence and correct type
+    error_message = "is missing or not of the expected type."
+
+    if (
+        data.get("recipe") is None
+        or not isinstance(data.get("recipe"), str)
+        or data.get("recipe").strip() == ""
+    ):
+        return f"Recipe value {error_message}"
+
+    # TODO: Add ingredients amount checking logic here if necessary, e.g., checking for a list of ingredients or specific ingredient required against inputted ingredients.
+    if (
+        data.get("ingredients") is None
+        or not isinstance(data.get("ingredients"), str)
+        or data.get("ingredients").strip() == ""
+    ):
+        return f"Ingredients value {error_message}."
+
+    if (
+        data.get("instructions") is None
+        or not isinstance(data.get("instructions"), str)
+        or data.get("instructions").strip() == ""
+    ):
+        return f"Instructions value {error_message}"
+
+    if data.get("confidence") is None or not isinstance(
+        data.get("confidence"), (int, float)
+    ):
+        return f"Confidence value {error_message}"
+
+    elif not (0.85 <= data["confidence"] <= 1):
+        return "Confidence value is out of the expected range (0.85 to 1)."
+
+    return data
