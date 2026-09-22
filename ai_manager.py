@@ -1,8 +1,11 @@
 # --- Imports --- #
 from google import genai
+from dotenv import load_dotenv
+import os
 
-# --- Constants --- #
-API_KEY = "AQ.Ab8RN6LMOUOVeyifr_4w_6hZcIG__9exVtc742oVyL3pilUaiA"
+# --- Load Environment Variables --- #
+load_dotenv(dotenv_path="./.env")
+API_KEY = os.getenv("GENAI_API_KEY")
 
 
 # --- Functions --- #
@@ -10,6 +13,7 @@ def call_api(prompt: str = ""):
     """
     Function to call the API and handle the response.
     """
+
     client = genai.Client(api_key=API_KEY)
 
     interaction = client.interactions.create(
