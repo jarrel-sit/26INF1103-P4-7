@@ -8,6 +8,23 @@ load_dotenv(dotenv_path="./.env")
 API_KEY = os.getenv("GENAI_API_KEY")
 
 
+# --- Constants --- #
+RESPONSE_FORMAT = {
+    "type": "text",
+    "mime_type": "application/json",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "recipe": {"type": "string"},
+            "ingredients": {"type": "string"},
+            "instructions": {"type": "string"},
+            "confidence": {"type": "number"},
+        },
+        "required": ["recipe", "ingredients", "instructions", "confidence"],
+    },
+}
+
+
 # --- Functions --- #
 def call_api(prompt: str = ""):
     """
@@ -19,20 +36,7 @@ def call_api(prompt: str = ""):
     interaction = client.interactions.create(
         model="gemini-3.1-flash-lite",
         input=prompt,
-        response_format={
-            "type": "text",
-            "mime_type": "application/json",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "recipe": {"type": "string"},
-                    "ingredients": {"type": "string"},
-                    "instructions": {"type": "string"},
-                    "confidence": {"type": "number"},
-                },
-                "required": ["recipe", "ingredients", "instructions", "confidence"],
-            },
-        },
+        response_format=RESPONSE_FORMAT,
     )
 
     return interaction.output_text
