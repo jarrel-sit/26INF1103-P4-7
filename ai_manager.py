@@ -18,20 +18,6 @@ REQUIRED_KEYS = [
     "instructions",
     "confidence",
 ]  # placeholder for now, to be updated with actual input from user if necessary
-RESPONSE_FORMAT = {
-    "type": "text",
-    "mime_type": "application/json",
-    "schema": {
-        "type": "object",
-        "properties": {
-            "recipe": {"type": "string"},
-            "ingredients": {"type": "string"},
-            "instructions": {"type": "string"},
-            "confidence": {"type": "number"},
-        },
-        "required": ["recipe", "ingredients", "instructions", "confidence"],
-    },
-}
 
 
 # --- Functions --- #
@@ -63,7 +49,6 @@ def call_api(prompt: str = ""):
         interaction = CLIENT.interactions.create(
             model="gemini-3.1-flash-lite",
             input=prompt,
-            response_format=RESPONSE_FORMAT,
             stream=True,  # Enable streaming to receive partial responses as they are generated
         )
 
@@ -132,7 +117,6 @@ def validate_response(data: dict):
     ):
         return f"Recipe value {error_message}"
 
-    # TODO: Add ingredients amount checking logic here if necessary, e.g., checking for a list of ingredients or specific ingredient required against inputted ingredients.
     if (
         data.get("ingredients") is None
         or not isinstance(data.get("ingredients"), str)
@@ -151,8 +135,5 @@ def validate_response(data: dict):
         data.get("confidence"), (int, float)
     ):
         return f"Confidence value {error_message}"
-
-    elif not (0.85 <= data["confidence"] <= 1):
-        return "Confidence value is out of the expected range (0.85 to 1)."
 
     return data
