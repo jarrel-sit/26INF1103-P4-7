@@ -35,6 +35,24 @@ RESPONSE_FORMAT = {
 
 
 # --- Functions --- #
+def build_prompt(record: dict):
+    """
+    Function to build the prompt for the API call.
+    """
+
+    # Build the prompt string with the provided ingredients
+    # TODO: Revamp prompt from current placeholder version
+    prompt = f"""
+    You are a recipe generator. Given the following ingredients: {', '.join(record.get('ingredients', []))}, 
+    generate a recipe that includes the recipe name, ingredients list, and step-by-step instructions. 
+    Also, provide a confidence score between 0.85 and 1 indicating how confident you are in the recipe's quality.
+    The response should be in JSON format with the following keys: 
+    'recipe', 'ingredients', 'instructions', and 'confidence'.
+    """
+
+    return prompt
+
+
 def call_api(prompt: str = ""):
     """
     Function to call the API and handle the response.
