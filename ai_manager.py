@@ -17,6 +17,8 @@ REQUIRED_KEYS = [
     "ingredients",
     "instructions",
     "confidence",
+    "hazardous_ingredients",
+    "equipment"
 ]  # placeholder for now, to be updated with actual input from user if necessary
 
 
@@ -29,11 +31,11 @@ def build_prompt(record: dict):
     # Build the prompt string with the provided ingredients
     # TODO: Revamp prompt from current placeholder version
     prompt = f"""
-    You are a recipe generator. Given the following ingredients: {', '.join(record.get('ingredients', []))}, 
-    generate a recipe that includes the recipe name, ingredients list, and step-by-step instructions. 
-    Also, provide a confidence score between 0.85 and 1 indicating how confident you are in the recipe's quality.
+ Generate a list of Recipes using this list of ingredients and their provided amounts. Not all ingredients/ amounts have to be used to completion for each recipe but do not include ingredients or quantities not listed. Take into consideration the user's diets and allergies inputted below as well. Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of utensils needed, and time taken for each step of the recipe.  Remove any hazardous or inedible ingredients and write them at the bottom of the JSON file. 
+ {', '.join(record.get('ingredients', []))}, 
+  
     The response should be in JSON format with the following keys: 
-    'recipe', 'ingredients', 'instructions', and 'confidence'.
+    'recipe', 'ingredients', 'instructions', 'confidence','hazardous_ingredients'and 'equipment'.
     """
 
     return prompt
