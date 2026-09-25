@@ -19,7 +19,7 @@ REQUIRED_KEYS = [
     "confidence",
     "hazardous_ingredients",
     "equipment",
-    "serving_size"
+    "serving_size",
 ]  # placeholder for now, to be updated with actual input from user if necessary
 
 
@@ -151,12 +151,3 @@ def validate_response(data: dict):
         return f"Confidence value {error_message}"
 
     return data
-
-
-print(
-    call_api(
-        build_prompt(
-            {"ingredients": ["chicken", "rice"], "amount": ["100g", "1kg"], "pax": 2}
-        )
-    )
-)
