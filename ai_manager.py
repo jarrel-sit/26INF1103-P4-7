@@ -18,7 +18,8 @@ REQUIRED_KEYS = [
     "instructions",
     "confidence",
     "hazardous_ingredients",
-    "equipment"
+    "equipment",
+    "serving_size"
 ]  # placeholder for now, to be updated with actual input from user if necessary
 
 
@@ -29,13 +30,24 @@ def build_prompt(record: dict):
     """
 
     # Build the prompt string with the provided ingredients
-    # TODO: Revamp prompt from current placeholder version
-    prompt = f"""
- Generate a list of Recipes using this list of ingredients and their provided amounts. Not all ingredients/ amounts have to be used to completion for each recipe but do not include ingredients or quantities not listed. Take into consideration the user's diets and allergies inputted below as well. Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of utensils needed, and time taken for each step of the recipe.  Remove any hazardous or inedible ingredients and write them at the bottom of the JSON file. 
- {', '.join(record.get('ingredients', []))}, 
+    # TODO: Revamp prompt to include any additional input fields if necessary
+    prompt = f"""You are a recipe generator. Generate a list of recipes using this list of ingredients and their provided amounts. 
+    Not all ingredients/amounts have to be used to completion for each recipe but do not include ingredients or 
+    quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 
+    Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
+    online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
+    utensils needed, and time taken for each step of the recipe. Remove any hazardous or inedible ingredients 
+    and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
+    from 0 to 1 for evaluating it's usability.
+    
+    Ingredients: {', '.join(
+        f"{ingredient} ({amount})" for ingredient, amount in zip(record['ingredients'], record['amount']) 
+    )}, 
+
+    Serving size: {record['pax']}
   
     The response should be in JSON format with the following keys: 
-    'recipe', 'ingredients', 'instructions', 'confidence','hazardous_ingredients'and 'equipment'.
+    'recipe', 'ingredients', 'instructions', 'confidence', 'hazardous_ingredients' and 'equipment'.
     """
 
     return prompt
@@ -139,3 +151,12 @@ def validate_response(data: dict):
         return f"Confidence value {error_message}"
 
     return data
+
+
+print(
+    call_api(
+        build_prompt(
+            {"ingredients": ["chicken", "rice"], "amount": ["100g", "1kg"], "pax": 2}
+        )
+    )
+)
