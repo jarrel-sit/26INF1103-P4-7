@@ -19,7 +19,6 @@ REQUIRED_KEYS = [
     "confidence",
     "hazardous_ingredients",
     "equipment",
-    "serving_size",
 ]  # placeholder for now, to be updated with actual input from user if necessary
 
 
