@@ -93,7 +93,6 @@ def evaluate(record: dict) -> dict:
 # =======================================
 # === Required Framework 2/3: Scoring ===
 # =======================================
-
 def score(record: dict) -> float:
     """
     Produces a numeric score (0-100) from AI output fields, used to rank
@@ -123,3 +122,62 @@ def score(record: dict) -> float:
     # then staying within the time budget.
     weighted = (confidence * 0.5) + (ingredient_ratio * 0.35) + (time_ratio * 0.15)
     return round(weighted * 100, 1)
+
+# =======================================
+# === Required Framework 3/3: Routing ===
+# =======================================
+def route(record: dict) -> dict:
+    """
+    Combines evaluate() and score() to assign the record to an outcome path:
+    "reject", "flag", or "accept".
+        - REJECT if there's an allergy conflict OR AI confidence is below
+          threshold. Safety/trust issues get no partial credit regardless
+          of score.
+        - FLAG if ingredients are missing, a dietary preference isn't met,
+          or it runs over time - any one of these, or a combination.
+        - ACCEPT only if every rule passes.
+    """
+    decision = evaluate(record)
+    results = decision["rule_results"]
+    numeric_score = score(record)
+ 
+    allergy_conflict = not results["allergy_restrictions"]["passed"]
+    low_confidence = not results["ai_confidence"]["passed"]
+    missing_ingredients = not results["ingredient_availability"]["passed"]
+    diet_unmet = not results["dietary_restrictions"]["passed"]
+    over_time = not results["cooking_time"]["passed"]
+ 
+    if allergy_conflict or low_confidence:
+        outcome = "reject"
+        reason = "allergy conflict" if allergy_conflict else "AI confidence too low"
+    elif missing_ingredients or diet_unmet or over_time:
+        outcome = "flag"
+        reasons = []
+        if missing_ingredients:
+            reasons.append("missing ingredients")
+        if diet_unmet:
+            reasons.append("dietary preference not met")
+        if over_time:
+            reasons.append("exceeds max cooking time")
+        reason = ", ".join(reasons)
+    else:
+        outcome = "accept"
+        reason = "all business rules passed"
+ 
+    return {
+        "recipe_name": record.get("recipe_name"),
+        "outcome": outcome,
+        "reason": reason,
+        "score": numeric_score,
+        "rule_results": results,
+    }
+ 
+def route_batch(records: list) -> list:
+    """
+    Convenience wrapper: route() a list of candidate records and return
+    them ranked accept -> flag -> reject, highest score first within each
+    group, so data_manager/io_manager get an ordered list to save/display.
+    """
+    outcome_order = {"accept": 0, "flag": 1, "reject": 2}
+    routed = [route(r) for r in records]
+    return sorted(routed, key=lambda r: (outcome_order[r["outcome"]], -r["score"]))
