@@ -43,3 +43,19 @@ def check_dietary_restrictions(record: dict) -> dict:
         "passed": len(unmet) == 0,
         "unmet_preferences": unmet,
     }
+
+def check_cooking_time(record: dict) -> dict:
+    """
+    Rule: Recipe should match the user's max cooking-time preference
+    where possible.
+    """
+    max_time = record.get("max_cooking_time_minutes")
+    estimated = record.get("estimated_cooking_time_minutes", 0)
+    within_range = max_time is None or estimated <= max_time
+ 
+    return {
+        "rule": "cooking_time",
+        "passed": within_range,
+        "estimated_minutes": estimated,
+        "max_minutes": max_time,
+    }
