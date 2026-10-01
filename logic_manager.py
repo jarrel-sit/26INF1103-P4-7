@@ -89,3 +89,37 @@ def evaluate(record: dict) -> dict:
             "ai_confidence": check_ai_confidence(record),
         },
     }
+
+# =======================================
+# === Required Framework 2/3: Scoring ===
+# =======================================
+
+def score(record: dict) -> float:
+    """
+    Produces a numeric score (0-100) from AI output fields, used to rank
+    multiple candidate recipes against each other. Rewards high AI
+    confidence, ingredient completeness, and staying under the time budget.
+    """
+    confidence = record.get("confidence_score", 0.0)
+ 
+    needed = set(record.get("ingredients_used", []))
+    have = {i.strip().lower() for i in record.get("available_ingredients", [])}
+    needed_lower = {i.strip().lower() for i in needed}
+    ingredient_ratio = (
+        len(needed_lower & have) / len(needed_lower) if needed_lower else 1.0
+    )
+ 
+    max_time = record.get("max_cooking_time_minutes")
+    estimated = record.get("estimated_cooking_time_minutes", 0)
+    if max_time:
+        time_ratio = max(0.0, min(1.0, 1 - (estimated - max_time) / max_time)) \
+            if estimated > max_time else 1.0
+    else:
+        time_ratio = 1.0
+ 
+    # Weighted blend: 
+    # AI confidence matters most, 
+    # then having the ingredients on hand, 
+    # then staying within the time budget.
+    weighted = (confidence * 0.5) + (ingredient_ratio * 0.35) + (time_ratio * 0.15)
+    return round(weighted * 100, 1)
