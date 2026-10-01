@@ -181,3 +181,32 @@ def route_batch(records: list) -> list:
     outcome_order = {"accept": 0, "flag": 1, "reject": 2}
     routed = [route(r) for r in records]
     return sorted(routed, key=lambda r: (outcome_order[r["outcome"]], -r["score"]))
+
+# =========================================================================
+# === 5.3 Deliverables - Automated Test Script ============================
+# For testing purposes - this is the kind of hardcoded record an automated
+# test script (deliverable 5.3) should use, since it needs to run without a
+# live API connection. Run directly with: python logic_manager.py
+# =========================================================================
+if __name__ == "__main__":
+    sample_record = {
+        # ie. from user input (io_manager)
+        "available_ingredients": ["chicken", "rice", "egg", "carrot"],  # missing onion
+        "allergies": ["peanuts"],
+        "dietary_preferences": [],
+        "max_cooking_time_minutes": 30,
+        # ie. from AI (ai_manager)
+        "recipe_name": "Chicken Fried Rice",
+        "ingredients_used": ["chicken", "rice", "egg", "carrot", "onion"],
+        "instructions": [
+            "Cook chicken", "Fry onions and carrots",
+            "Add rice", "Mix in egg", "Season and serve",
+        ],
+        "estimated_cooking_time_minutes": 25,
+        "tags": ["contains_egg"],
+        "confidence_score": 0.82,
+    }
+ 
+    print(evaluate(sample_record))
+    print(score(sample_record))
+    print(route(sample_record))
