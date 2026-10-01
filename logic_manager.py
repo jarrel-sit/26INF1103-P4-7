@@ -71,3 +71,21 @@ def check_ai_confidence(record: dict, min_confidence: float = 0.6) -> dict:
         "confidence_score": score_val,
         "threshold": min_confidence,
     }
+
+# ==========================================
+# === Required Framework 1/3: Evaluation ===
+# ==========================================
+def evaluate(record: dict) -> dict:
+    """Runs every business rule against the AI-enriched record and returns a
+    decision dict: each rule's pass/fail plus details. Does not decide a
+    final outcome itself - that's route()'s job."""
+    return {
+        "recipe_name": record.get("recipe_name"),
+        "rule_results": {
+            "ingredient_availability": check_ingredient_availability(record),
+            "allergy_restrictions": check_allergy_restrictions(record),
+            "dietary_restrictions": check_dietary_restrictions(record),
+            "cooking_time": check_cooking_time(record),
+            "ai_confidence": check_ai_confidence(record),
+        },
+    }
