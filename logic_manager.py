@@ -29,3 +29,17 @@ def check_allergy_restrictions(record: dict) -> dict:
         "passed": len(conflicts) == 0,
         "conflicting_allergens": conflicts,
     }
+
+def check_dietary_restrictions(record: dict) -> dict:
+    """
+    Rule: Recipe must follow the user's selected dietary requirements
+    """
+    required = {d.strip().lower() for d in record.get("dietary_preferences", [])}
+    tags = {t.strip().lower() for t in record.get("tags", [])}
+    unmet = sorted(required - tags)
+ 
+    return {
+        "rule": "dietary_restrictions",
+        "passed": len(unmet) == 0,
+        "unmet_preferences": unmet,
+    }
