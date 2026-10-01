@@ -1,6 +1,7 @@
 # === Imports ===
 from typing import Any
 
+# == Rule Functions ===
 def check_ingredient_availability(record: dict) -> dict:
     """
     Rule: Only recommend meals/recipes using ingredients the user has, or flag what needs to be bought.
@@ -58,4 +59,15 @@ def check_cooking_time(record: dict) -> dict:
         "passed": within_range,
         "estimated_minutes": estimated,
         "max_minutes": max_time,
+    }
+
+def check_ai_confidence(record: dict, min_confidence: float = 0.6) -> dict:
+    """Guards logic_manager against acting on a low-confidence AI response."""
+    score_val = record.get("confidence_score", 0.0)
+ 
+    return {
+        "rule": "ai_confidence_threshold",
+        "passed": score_val >= min_confidence,
+        "confidence_score": score_val,
+        "threshold": min_confidence,
     }
