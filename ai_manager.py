@@ -35,7 +35,7 @@ def build_prompt(record: dict):
     quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 
     Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
     online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
-    utensils needed, and time taken for each step of the recipe. Remove any hazardous or inedible ingredients 
+    utensils needed, and time taken for each step of the recipe.Include how much of each ingredient is used in each step while describing the step.Remove any hazardous or inedible ingredients 
     and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
     from 0 to 1 for evaluating it's usability.
     
