@@ -48,7 +48,7 @@ RECIPE_FIELDNAMES = [
 # ---------------------------------------------------------------------------
 
 
-def load_records(filepath=DEFAULT_FILEPATH):
+def load_records(filepath=DEFAULT_FILEPATH, logger=None):
     """
     Loads all saved records from the CSV spreadsheet.
 
@@ -59,10 +59,12 @@ def load_records(filepath=DEFAULT_FILEPATH):
     instead of crashing the program.
     """
     if not os.path.exists(filepath):
-        print(
-            f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one."
-        )
-        _create_empty_file(filepath)
+        if logger:
+            logger(
+                f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one."
+            )
+
+        _create_empty_file(filepath, logger=logger)
         return []
 
     records = []
@@ -71,10 +73,12 @@ def load_records(filepath=DEFAULT_FILEPATH):
             reader = csv.DictReader(file)
 
             if reader.fieldnames is None or set(reader.fieldnames) != set(FIELDNAMES):
-                print(
-                    f"[Data Manager] Warning: '{filepath}' has an unexpected or missing "
-                    f"header and appears corrupted. Starting with an empty record set."
-                )
+                if logger:
+                    logger(
+                        f"[Data Manager] Warning: '{filepath}' has an unexpected or missing "
+                        f"header and appears corrupted. Starting with an empty record set."
+                    )
+
                 return []
 
             for row_number, row in enumerate(reader, start=2):  # row 1 is the header
@@ -83,35 +87,43 @@ def load_records(filepath=DEFAULT_FILEPATH):
                         raise ValueError("missing ingredient/quantity")
                     records.append(row)
                 except (ValueError, KeyError) as row_error:
-                    print(
-                        f"[Data Manager] Warning: skipping corrupt row {row_number} "
-                        f"in '{filepath}' ({row_error})."
-                    )
+                    if logger:
+                        logger(
+                            f"[Data Manager] Warning: skipping corrupt row {row_number} "
+                            f"in '{filepath}' ({row_error})."
+                        )
+
                     continue
 
     except (csv.Error, OSError, UnicodeDecodeError) as file_error:
-        print(
-            f"[Data Manager] Warning: could not read '{filepath}' ({file_error}). "
-            f"Treating it as empty/corrupt and starting fresh."
-        )
+        if logger:
+            logger(
+                f"[Data Manager] Warning: could not read '{filepath}' ({file_error}). "
+                f"Treating it as empty/corrupt and starting fresh."
+            )
+
         return []
 
-    print(
-        f"[Data Manager] Loaded {len(records)} ingredient record(s) from '{filepath}'."
-    )
+    if logger:
+        logger(
+            f"[Data Manager] Loaded {len(records)} ingredient record(s) from '{filepath}'."
+        )
+
     return records
 
 
-def _create_empty_file(filepath, fieldnames=FIELDNAMES):
+def _create_empty_file(filepath, fieldnames=FIELDNAMES, logger=None):
     """Creates a new CSV spreadsheet with just the header row."""
     try:
         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames)
             writer.writeheader()
+
     except OSError as error:
-        print(
-            f"[Data Manager] Error: could not create data file '{filepath}' ({error})."
-        )
+        if logger:
+            logger(
+                f"[Data Manager] Error: could not create data file '{filepath}' ({error})."
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +131,7 @@ def _create_empty_file(filepath, fieldnames=FIELDNAMES):
 # ---------------------------------------------------------------------------
 
 
-def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH):
+def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH, logger=None):
     """
     Saves a processed set of ingredients (as produced by
     io_manager.ingredient_input()) into the CSV spreadsheet, one row per
@@ -131,11 +143,13 @@ def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH):
     Returns True if the save succeeded, False otherwise (never raises).
     """
     if not ingredients_list:
-        print("[Data Manager] Nothing to save - ingredients list is empty.")
+        if logger:
+            logger("[Data Manager] Nothing to save - ingredients list is empty.")
+
         return False
 
     if not os.path.exists(filepath):
-        _create_empty_file(filepath)
+        _create_empty_file(filepath, logger=logger)
 
     session_id = _next_session_id(filepath)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -152,14 +166,19 @@ def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH):
                         "quantity": quantity,
                     }
                 )
+
     except OSError as error:
-        print(f"[Data Manager] Error: could not save to '{filepath}' ({error}).")
+        if logger:
+            logger(f"[Data Manager] Error: could not save to '{filepath}' ({error}).")
+
         return False
 
-    print(
-        f"[Data Manager] Saved {len(ingredients_list)} ingredient(s) to '{filepath}' "
-        f"(session {session_id})."
-    )
+    if logger:
+        logger(
+            f"[Data Manager] Saved {len(ingredients_list)} ingredient(s) to '{filepath}' "
+            f"(session {session_id})."
+        )
+
     return True
 
 
@@ -170,12 +189,14 @@ def _next_session_id(filepath):
     for row in records:
         try:
             ids.append(int(row.get("session_id", 0)))
+
         except (ValueError, TypeError):
             continue
+
     return max(ids, default=0) + 1
 
 
-def save(record, filepath=DEFAULT_RECIPES_FILEPATH):
+def save(record, filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
     """
     Appends a fully evaluated record (from logic_manager) to persistent storage.
     Returns True if save succeeded, False otherwise.
@@ -199,9 +220,17 @@ def save(record, filepath=DEFAULT_RECIPES_FILEPATH):
                     "instructions": json.dumps(record.get("instructions", [])),
                 }
             )
-        return True
-    except OSError:
+
+    except OSError as error:
+        if logger:
+            logger(f"[Data Manager] Error: could not save to '{filepath}' ({error}).")
+
         return False
+
+    if logger:
+        logger(f"[Data Manager] Saved recipes to '{filepath}'.")
+
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -233,24 +262,24 @@ def get_unique_ingredients(records):
 # Demo / integration with io_manager
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    from io_manager import ingredient_input
+# if __name__ == "__main__":
+#     from io_manager import ingredient_input
 
-    # 2. Load whatever memory already exists from previous runs.
-    existing_records = load_records()
+#     # 2. Load whatever memory already exists from previous runs.
+#     existing_records = load_records()
 
-    # Collect this session's ingredients via io_manager.
-    user_ingredients = ingredient_input()
+#     # Collect this session's ingredients via io_manager.
+#     user_ingredients = ingredient_input()
 
-    # 1. Save this session's processed ingredients to the spreadsheet.
-    save_ingredients(user_ingredients)
+#     # 1. Save this session's processed ingredients to the spreadsheet.
+#     save_ingredients(user_ingredients)
 
-    # 3. Demonstrate a query: show every past session that used "sugar".
-    all_records = load_records()
-    sugar_rows = filter_by_ingredient(all_records, "sugar")
-    if sugar_rows:
-        print(f"\n[Data Manager] Found {len(sugar_rows)} past record(s) using 'sugar':")
-        for row in sugar_rows:
-            print(
-                f"  - Session {row['session_id']} ({row['timestamp']}): {row['quantity']}"
-            )
+#     # 3. Demonstrate a query: show every past session that used "sugar".
+#     all_records = load_records()
+#     sugar_rows = filter_by_ingredient(all_records, "sugar")
+#     if sugar_rows:
+#         print(f"\n[Data Manager] Found {len(sugar_rows)} past record(s) using 'sugar':")
+#         for row in sugar_rows:
+#             print(
+#                 f"  - Session {row['session_id']} ({row['timestamp']}): {row['quantity']}"
+#             )

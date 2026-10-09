@@ -194,3 +194,8 @@ def menu(options=5):
             return validated_choice
 
         print("Invalid option selected. Please try again.")
+
+
+def display_logs(log: str):
+    """Outputs verbose log messages."""
+    print(f"{log}")
