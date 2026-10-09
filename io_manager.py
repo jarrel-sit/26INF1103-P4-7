@@ -116,6 +116,7 @@ def ingredient_input(
         # Checks if user inputs 'done' and ingredients list is empty
         elif user_input.lower() == "done" and not ingredients_list:
             print(failure_message)
+            return ingredients_list
 
         # User inputs done to stop adding ingredients and ingredients list is not empty
         elif user_input.lower() == "done" and ingredients_list:
