@@ -102,11 +102,11 @@ def load_records(filepath=DEFAULT_FILEPATH):
     return records
 
 
-def _create_empty_file(filepath):
+def _create_empty_file(filepath, fieldnames=FIELDNAMES):
     """Creates a new CSV spreadsheet with just the header row."""
     try:
         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
+            writer = csv.DictWriter(file, fieldnames)
             writer.writeheader()
     except OSError as error:
         print(
