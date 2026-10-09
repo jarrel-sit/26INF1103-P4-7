@@ -7,7 +7,7 @@ def check_ingredient_availability(record: dict) -> dict:
     Rule: Only recommend meals/recipes using ingredients the user has, or flag what needs to be bought.
     """
     needed = {i.strip().lower() for i in record.get("ingredients_used", [])}
-    have = {i.strip().lower() for i in record.get("available_ingredients", [])}
+    have = {i.strip().lower() for i in record.get("available_ingredients", {})}
     missing = sorted(needed - have)
  
     return {
@@ -20,6 +20,12 @@ def check_allergy_restrictions(record: dict) -> dict:
     """
     Rule: Exclude/reject any recipe that conflicts with a stated allergy.
     """
+    if "allergies" not in record:
+        return {
+            "rule": "allergy_restrictions",
+            "passed": False,
+            "conflicting_allergens": ["allergies field missing"],
+        }
     allergies = {a.strip().lower() for a in record.get("allergies", [])}
     ingredients = {i.strip().lower() for i in record.get("ingredients_used", [])}
     tags = {t.strip().lower() for t in record.get("tags", [])}
@@ -62,7 +68,9 @@ def check_cooking_time(record: dict) -> dict:
     }
 
 def check_ai_confidence(record: dict, min_confidence: float = 0.6) -> dict:
-    """Guards logic_manager against acting on a low-confidence AI response."""
+    """
+    Guards logic_manager against acting on a low-confidence AI response.
+    """
     score_val = record.get("confidence_score", 0.0)
  
     return {
@@ -76,9 +84,11 @@ def check_ai_confidence(record: dict, min_confidence: float = 0.6) -> dict:
 # === Required Framework 1/3: Evaluation ===
 # ==========================================
 def evaluate(record: dict) -> dict:
-    """Runs every business rule against the AI-enriched record and returns a
+    """
+    Runs every business rule against the AI-enriched record and returns a
     decision dict: each rule's pass/fail plus details. Does not decide a
-    final outcome itself - that's route()'s job."""
+    final outcome itself
+    """
     return {
         "recipe_name": record.get("recipe_name"),
         "rule_results": {
@@ -101,11 +111,11 @@ def score(record: dict) -> float:
     """
     confidence = record.get("confidence_score", 0.0)
  
-    needed = set(record.get("ingredients_used", []))
-    have = {i.strip().lower() for i in record.get("available_ingredients", [])}
-    needed_lower = {i.strip().lower() for i in needed}
+    needed = {i.strip().lower() for i in record.get("ingredients_used", [])}
+    have = {i.strip().lower() for i in record.get("available_ingredients", {})}
+    
     ingredient_ratio = (
-        len(needed_lower & have) / len(needed_lower) if needed_lower else 1.0
+        len(needed & have) / len(needed) if needed else 1.0
     )
  
     max_time = record.get("max_cooking_time_minutes")
@@ -181,32 +191,3 @@ def route_batch(records: list) -> list:
     outcome_order = {"accept": 0, "flag": 1, "reject": 2}
     routed = [route(r) for r in records]
     return sorted(routed, key=lambda r: (outcome_order[r["outcome"]], -r["score"]))
-
-# =========================================================================
-# === 5.3 Deliverables - Automated Test Script ============================
-# For testing purposes - this is the kind of hardcoded record an automated
-# test script (deliverable 5.3) should use, since it needs to run without a
-# live API connection. Run directly with: python logic_manager.py
-# =========================================================================
-if __name__ == "__main__":
-    sample_record = {
-        # ie. from user input (io_manager)
-        "available_ingredients": ["chicken", "rice", "egg", "carrot"],  # missing onion
-        "allergies": ["peanuts"],
-        "dietary_preferences": [],
-        "max_cooking_time_minutes": 30,
-        # ie. from AI (ai_manager)
-        "recipe_name": "Chicken Fried Rice",
-        "ingredients_used": ["chicken", "rice", "egg", "carrot", "onion"],
-        "instructions": [
-            "Cook chicken", "Fry onions and carrots",
-            "Add rice", "Mix in egg", "Season and serve",
-        ],
-        "estimated_cooking_time_minutes": 25,
-        "tags": ["contains_egg"],
-        "confidence_score": 0.82,
-    }
- 
-    print(evaluate(sample_record))
-    print(score(sample_record))
-    print(route(sample_record))
