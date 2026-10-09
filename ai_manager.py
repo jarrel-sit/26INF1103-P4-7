@@ -30,7 +30,7 @@ def build_prompt(record: dict):
 
     # Build the prompt string with the provided ingredients
     # TODO: Revamp prompt to include any additional input fields if necessary
-    prompt = f"""You are a recipe generator. Generate a list of recipes using this list of ingredients and their provided amounts. 
+    prompt = f"""You are a recipe generator. Generate a list of three different recipes using this list of ingredients and their provided amounts. 
     Not all ingredients/amounts have to be used to completion for each recipe but do not include ingredients or 
     quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 
     Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
@@ -42,6 +42,10 @@ def build_prompt(record: dict):
     Ingredients: {', '.join(
         f"{ingredient} ({amount})" for ingredient, amount in zip(record['ingredients'], record['amount']) 
     )}, 
+
+    Allergies: {', '.join(record['allergies']) if record['allergies'] else 'None'},
+
+    Diets: {', '.join(record['diets']) if record['diets'] else 'None'},
 
     Serving size: {record['pax']}
   
