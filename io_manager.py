@@ -2,28 +2,28 @@
 import re
 
 #Input Handling
-def pax():
-    while True:
-        #Asks user for pax input
-        num_ppl = input("How many pax is this meal for? ")
+# def pax():
+#     while True:
+#         #Asks user for pax input
+#         num_ppl = input("How many pax is this meal for? ")
 
-        #Checks if user input is non-negative and numeric
-        if num_ppl.isnumeric() == False:
-            print('Invalid pax input, please input a non-negative number for pax.')
-        else:
-            #Validation for pax check if pax more than 10 (Large number of people)
-            num_ppl = int(num_ppl)
-            if num_ppl > 10:
-                accept = input("This is a large number of people, results might not be accurate based on your ingredients inputs, are you sure? Please input Yes/No\n").lower()
-                pattern = "[yes|no]"
-                match = re.match(pattern,accept) 
-                if match:
-                    print(f'Noted. Pax of {num_ppl} has be taken note of.')
-                    return num_ppl
-                else:
-                    print('Invalid please input a non-negative number for pax.')
-            else:
-                return num_ppl
+#         #Checks if user input is non-negative and numeric
+#         if num_ppl.isnumeric() == False:
+#             print('Invalid pax input, please input a non-negative number for pax.')
+#         else:
+#             #Validation for pax check if pax more than 10 (Large number of people)
+#             num_ppl = int(num_ppl)
+#             if num_ppl > 10:
+#                 accept = input("This is a large number of people, results might not be accurate based on your ingredients inputs, are you sure? Please input Yes/No\n").lower()
+#                 pattern = "[yes|no]"
+#                 match = re.match(pattern,accept) 
+#                 if match:
+#                     print(f'Noted. Pax of {num_ppl} has be taken note of.')
+#                     return num_ppl
+#                 else:
+#                     print('Invalid please input a non-negative number for pax.')
+#             else:
+#                 return num_ppl
 
 
 #Function for inputting dietary restrictions
@@ -118,10 +118,11 @@ def ingredient_input():
                 quantity = match.group(2) + match.group(3)
 
                 #Adds name and quantity to dictionary
-                ingredients_list[name] = quantity
+                if quantity.isnumeric():
+                    ingredients_list[name] = quantity
 
-                #Message to indicate valid input from user
-                print(f"Valid input received. {name.title()} {quantity} has been added to the ingredients list.")
+                    #Message to indicate valid input from user
+                    print(f"Valid input received. {name.title()} {quantity} has been added to the ingredients list.")
 
                 #Uncomment to see what enters ingredients_list
                 #print(ingredients_list)
@@ -129,14 +130,17 @@ def ingredient_input():
             else:
                 #Prompts user to input again if user gives rubbish format
                 print("Invalid input. Please try again.")
-            
-
-#Function Logic
 
 
-
-#Function Calls
-#diet()
-#allergy()
-#ingredient_input()
-pax()
+def checkfield(ingredients, allergies, dietreq):
+    allinputs = {#"pax": serving,
+                "ingredients":ingredients,
+                "allergies" : allergies,
+                "diet": dietreq
+                }
+    
+    # if not allinputs.get("pax"):
+    #     print("Please key in the serving size. Serving size information is missing.")
+    
+#checkfield(ingredients, allergies,dietreq)
+    
