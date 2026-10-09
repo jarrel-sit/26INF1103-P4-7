@@ -23,20 +23,30 @@ e.g.:
 extra columns later if needed.)
 """
 
-import csv
+import csv, json
 import os
 from datetime import datetime
 
 # Default location of the spreadsheet (CSV) that acts as persistent storage.
 DEFAULT_FILEPATH = "ingredients_data.csv"
+DEFAULT_RECIPES_FILEPATH = "recipe_data.csv"
 
 # Column headers for the CSV spreadsheet.
 FIELDNAMES = ["session_id", "timestamp", "ingredient", "quantity"]
+RECIPE_FIELDNAMES = [
+    "recipe_name",
+    "outcome",
+    "score",
+    "reason",
+    "ingredients_used",
+    "instructions",
+]
 
 
 # ---------------------------------------------------------------------------
 # 2. Load all records on startup (+ 4. handle missing/corrupt files)
 # ---------------------------------------------------------------------------
+
 
 def load_records(filepath=DEFAULT_FILEPATH):
     """
@@ -49,7 +59,9 @@ def load_records(filepath=DEFAULT_FILEPATH):
     instead of crashing the program.
     """
     if not os.path.exists(filepath):
-        print(f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one.")
+        print(
+            f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one."
+        )
         _create_empty_file(filepath)
         return []
 
@@ -59,8 +71,10 @@ def load_records(filepath=DEFAULT_FILEPATH):
             reader = csv.DictReader(file)
 
             if reader.fieldnames is None or set(reader.fieldnames) != set(FIELDNAMES):
-                print(f"[Data Manager] Warning: '{filepath}' has an unexpected or missing "
-                      f"header and appears corrupted. Starting with an empty record set.")
+                print(
+                    f"[Data Manager] Warning: '{filepath}' has an unexpected or missing "
+                    f"header and appears corrupted. Starting with an empty record set."
+                )
                 return []
 
             for row_number, row in enumerate(reader, start=2):  # row 1 is the header
@@ -69,16 +83,22 @@ def load_records(filepath=DEFAULT_FILEPATH):
                         raise ValueError("missing ingredient/quantity")
                     records.append(row)
                 except (ValueError, KeyError) as row_error:
-                    print(f"[Data Manager] Warning: skipping corrupt row {row_number} "
-                          f"in '{filepath}' ({row_error}).")
+                    print(
+                        f"[Data Manager] Warning: skipping corrupt row {row_number} "
+                        f"in '{filepath}' ({row_error})."
+                    )
                     continue
 
     except (csv.Error, OSError, UnicodeDecodeError) as file_error:
-        print(f"[Data Manager] Warning: could not read '{filepath}' ({file_error}). "
-              f"Treating it as empty/corrupt and starting fresh.")
+        print(
+            f"[Data Manager] Warning: could not read '{filepath}' ({file_error}). "
+            f"Treating it as empty/corrupt and starting fresh."
+        )
         return []
 
-    print(f"[Data Manager] Loaded {len(records)} ingredient record(s) from '{filepath}'.")
+    print(
+        f"[Data Manager] Loaded {len(records)} ingredient record(s) from '{filepath}'."
+    )
     return records
 
 
@@ -89,12 +109,15 @@ def _create_empty_file(filepath):
             writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
             writer.writeheader()
     except OSError as error:
-        print(f"[Data Manager] Error: could not create data file '{filepath}' ({error}).")
+        print(
+            f"[Data Manager] Error: could not create data file '{filepath}' ({error})."
+        )
 
 
 # ---------------------------------------------------------------------------
 # 1. Save processed records to CSV
 # ---------------------------------------------------------------------------
+
 
 def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH):
     """
@@ -121,18 +144,22 @@ def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH):
         with open(filepath, mode="a", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
             for name, quantity in ingredients_list.items():
-                writer.writerow({
-                    "session_id": session_id,
-                    "timestamp": timestamp,
-                    "ingredient": name,
-                    "quantity": quantity,
-                })
+                writer.writerow(
+                    {
+                        "session_id": session_id,
+                        "timestamp": timestamp,
+                        "ingredient": name,
+                        "quantity": quantity,
+                    }
+                )
     except OSError as error:
         print(f"[Data Manager] Error: could not save to '{filepath}' ({error}).")
         return False
 
-    print(f"[Data Manager] Saved {len(ingredients_list)} ingredient(s) to '{filepath}' "
-          f"(session {session_id}).")
+    print(
+        f"[Data Manager] Saved {len(ingredients_list)} ingredient(s) to '{filepath}' "
+        f"(session {session_id})."
+    )
     return True
 
 
@@ -148,14 +175,46 @@ def _next_session_id(filepath):
     return max(ids, default=0) + 1
 
 
+def save(record, filepath=DEFAULT_RECIPES_FILEPATH):
+    """
+    Appends a fully evaluated record (from logic_manager) to persistent storage.
+    Returns True if save succeeded, False otherwise.
+    """
+    if not record or not isinstance(record, dict):
+        return False
+
+    if not os.path.exists(filepath):
+        _create_empty_file(filepath, RECIPE_FIELDNAMES)
+
+    try:
+        with open(filepath, mode="a", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=RECIPE_FIELDNAMES)
+            writer.writerow(
+                {
+                    "recipe_name": record.get("recipe_name", "Unknown Recipe"),
+                    "outcome": record.get("outcome", "unknown"),
+                    "score": record.get("score", 0.0),
+                    "reason": record.get("reason", ""),
+                    "ingredients_used": json.dumps(record.get("ingredients_used", [])),
+                    "instructions": json.dumps(record.get("instructions", [])),
+                }
+            )
+        return True
+    except OSError:
+        return False
+
+
 # ---------------------------------------------------------------------------
 # 3. Filter / query functions
 # ---------------------------------------------------------------------------
 
+
 def filter_by_ingredient(records, ingredient_name):
     """Returns all rows matching a given ingredient name (case-insensitive)."""
     ingredient_name = ingredient_name.strip().lower()
-    return [row for row in records if row.get("ingredient", "").lower() == ingredient_name]
+    return [
+        row for row in records if row.get("ingredient", "").lower() == ingredient_name
+    ]
 
 
 def filter_by_session(records, session_id):
@@ -165,7 +224,9 @@ def filter_by_session(records, session_id):
 
 def get_unique_ingredients(records):
     """Returns a sorted list of every distinct ingredient ever saved."""
-    return sorted({row.get("ingredient", "") for row in records if row.get("ingredient")})
+    return sorted(
+        {row.get("ingredient", "") for row in records if row.get("ingredient")}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -190,4 +251,6 @@ if __name__ == "__main__":
     if sugar_rows:
         print(f"\n[Data Manager] Found {len(sugar_rows)} past record(s) using 'sugar':")
         for row in sugar_rows:
-            print(f"  - Session {row['session_id']} ({row['timestamp']}): {row['quantity']}")
+            print(
+                f"  - Session {row['session_id']} ({row['timestamp']}): {row['quantity']}"
+            )
