@@ -43,6 +43,10 @@ def build_prompt(record: dict):
         f"{ingredient} ({amount})" for ingredient, amount in zip(record['ingredients'], record['amount']) 
     )}, 
 
+    Allergies: {', '.join(record['allergies']) if record['allergies'] else 'None'},
+
+    Diets: {', '.join(record['diets']) if record['diets'] else 'None'},
+
     Serving size: {record['pax']}
   
     The response should be in JSON format with the following keys: 
