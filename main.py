@@ -17,7 +17,10 @@ def main():
 
         # Adding of new ingredients
         if choice == 1:
-            record["ingredients"] = io_manager.ingredient_input()
+            record["ingredients"] = io_manager.ingredient_input(
+                success_message="Updated the ingredients list!",
+                failure_message="No new ingredients were added. ",
+            )
 
         # List all ingredients
         elif choice == 2:

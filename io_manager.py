@@ -92,7 +92,10 @@ def allergy():
 
 
 # Function for inputting ingredient
-def ingredient_input():
+def ingredient_input(
+    success_message="Alright, looking for recipes with the ingredients you have...",
+    failure_message="You have not added any ingredients yet, we cannot generate any recipes for you...",
+):
     # Initiate ingredients list as empty dictionary
     ingredients_list = {}
 
@@ -112,13 +115,11 @@ def ingredient_input():
 
         # Checks if user inputs 'done' and ingredients list is empty
         elif user_input.lower() == "done" and not ingredients_list:
-            print(
-                "You have not added any ingredients yet, we cannot generate any recipes for you..."
-            )
+            print(failure_message)
 
         # User inputs done to stop adding ingredients and ingredients list is not empty
         elif user_input.lower() == "done" and ingredients_list:
-            print("Alright, looking for recipes with the ingredients you have...")
+            print(success_message)
             return ingredients_list
 
         else:
@@ -131,10 +132,10 @@ def ingredient_input():
 
                 # Extract the ingredient, quantity, and quantifier from the matched groups
                 name = match.group(1)
-                quantity = match.group(2) + match.group(3)
 
                 # Adds name and quantity to dictionary
-                if quantity.isnumeric():
+                if match.group(2).isnumeric() and match.group(3) == "ml" or match.group(3) == "g":
+                    quantity = match.group(2) + match.group(3)
                     ingredients_list[name] = quantity
 
                     # Message to indicate valid input from user
