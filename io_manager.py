@@ -163,7 +163,7 @@ def display_ingredients(record):
         print(f" - {item.title()}: {qty}")
 def display_list(records):
     print(f"\n--- Saved Records ({len(records)}) ---")
-for r in records:
+    for r in records:
         print(
             f"- {r.get('recipe_name')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
         )
@@ -264,3 +264,26 @@ def select_ingredients_from_available(available_ingredients: dict):
 
 
     return selected
+
+def collect_input(record: dict):
+    """Combines all input prompts into one standard record dict."""
+    # pax_val = input("How many pax is this meal for? ").strip()
+    # pax_num = int(pax_val) if pax_val.isdigit() else 1
+
+
+    ingredient_list = select_ingredients_from_available(record)
+    allergies_list = allergy()
+    diet_list = diet()
+
+
+    ## cooking time??
+
+
+    return {
+        # "pax": pax_num,
+        "ingredients": ingredient_list,
+        "available_ingredients": list(record.keys()),
+        "allergies": allergies_list,
+        "dietary_preferences": diet_list,
+        # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY
+    }
