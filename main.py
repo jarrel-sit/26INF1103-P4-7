@@ -39,7 +39,7 @@ def main():
 
         # View past (successful?) recommendations
         elif choice == 4:
-            past_recipes = load()
+            past_recipes = data_manager.load()
             pass
 
         # Exit program
