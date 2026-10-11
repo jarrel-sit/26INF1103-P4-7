@@ -161,6 +161,12 @@ def display_ingredients(record):
     print("\n--- Current Available Ingredients ---")
     for item, qty in ingredients.items():
         print(f" - {item.title()}: {qty}")
+def display_list(records):
+    print(f"\n--- Saved Records ({len(records)}) ---")
+for r in records:
+        print(
+            f"- {r.get('recipe_name')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
+        )
 
 
 def checkfield(ingredients, allergies, dietreq):

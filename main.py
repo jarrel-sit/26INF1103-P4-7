@@ -40,7 +40,8 @@ def main():
         # View past (successful?) recommendations
         elif choice == 4:
             past_recipes = data_manager.load()
-            pass
+            io_manager.display_list(past_recipes)
+
 
         # Exit program
         else:
