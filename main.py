@@ -24,7 +24,7 @@ def main():
 
         # List all ingredients
         elif choice == 2:
-            pass
+            io_manager.display_ingredients(record)
 
         # AI Recipe recommendation
         elif choice == 3:  ## assuming diet and input allergy

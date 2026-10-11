@@ -152,6 +152,18 @@ def ingredient_input(
                 print("Invalid input. Please try again.")
 
 
+def display_ingredients(record):
+    ingredients = record.get("ingredients", {})
+
+    if not ingredients:
+        print("\nYou have not added any ingredients yet.")
+
+        return
+    print("\n--- Current Available Ingredients ---")
+    for item, qty in ingredients.items():
+        print(f" - {item.title()}: {qty}")
+
+
 def checkfield(ingredients, allergies, dietreq):
     allinputs = {  # "pax": serving,
         "ingredients": ingredients,
