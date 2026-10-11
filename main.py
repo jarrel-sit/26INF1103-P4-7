@@ -39,6 +39,7 @@ def main():
 
         # View past (successful?) recommendations
         elif choice == 4:
+            past_recipes = load()
             pass
 
         # Exit program
