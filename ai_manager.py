@@ -2,8 +2,7 @@
 from google import genai
 from google.genai import errors
 from dotenv import load_dotenv
-import os
-import json
+import os, json, time
 
 # --- Load Environment Variables --- #
 load_dotenv(dotenv_path="./.env")
@@ -56,37 +55,45 @@ def build_prompt(record: dict):
     return prompt
 
 
-def call_api(prompt: str = ""):
+def call_api(prompt: str = "", max_retries: int = 3, delay: int = 2):
     """
     Function to call the API and handle the response.
     """
 
-    try:
-        response = ""
-        interaction = CLIENT.interactions.create(
-            model="gemini-3.1-flash-lite",
-            input=prompt,
-            stream=True,  # Enable streaming to receive partial responses as they are generated
-        )
+    # Retries the API calls, only fail if all tries unsuccessful
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = ""
+            interaction = CLIENT.interactions.create(
+                model="gemini-3.1-flash-lite",
+                input=prompt,
+                stream=True,  # Enable streaming to receive partial responses as they are generated
+            )
 
-        for event in interaction:
-            # Check for error events
-            if hasattr(event, "error") and event.error:
-                return f"API Error ({event.error.code}): {event.error.message}"
+            for event in interaction:
+                # Check for error events
+                if hasattr(event, "error") and event.error:
+                    return f"API Error ({event.error.code}): {event.error.message}"
 
-            # Check if the event contains text delta chunks (successful responses)
-            if (
-                hasattr(event, "delta")
-                and hasattr(event.delta, "text")
-                and event.delta.text
-            ):
-                response += event.delta.text
+                # Check if the event contains text delta chunks (successful responses)
+                if (
+                    hasattr(event, "delta")
+                    and hasattr(event.delta, "text")
+                    and event.delta.text
+                ):
+                    response += event.delta.text
 
-        return response
+            return response
 
-    except Exception as e:
-        # Catches network drops or client-side issues outside the stream loop
-        return f"Transport or connection exception: {e}"
+        except Exception as e:
+            # Handles retries
+            if attempt < max_retries:
+                # Wait in increasing timeframes
+                time.sleep(delay * attempt)
+                continue
+
+            # Catches network drops or client-side issues outside the stream loop
+            return f"Transport or connection exception: {e}"
 
 
 def parse_response(raw: str):
