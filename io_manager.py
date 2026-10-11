@@ -79,7 +79,7 @@ def allergy():
             allergy_list.append(allergic)
 
         # Checks if user's input is already in allergy list
-        elif allergic.lower() in allergy_list and allergic.lower() in allergy_list:
+        elif allergic.lower() in allergens and allergic.lower() in allergy_list:
             print(
                 "We have already taken note of that, please re-input or enter without input if no (more) allergies to be stated. \n"
             )
@@ -111,7 +111,6 @@ def ingredient_input(
         # Checks if user inputs nothing, prompts to re-enter if empty
         if user_input == "":
             print("Input cannot be empty. Please try again.")
-            continue
 
         # Checks if user inputs 'done' and ingredients list is empty
         elif user_input.lower() == "done" and not ingredients_list:
