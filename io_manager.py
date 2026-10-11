@@ -216,3 +216,51 @@ def menu(options=5):
 def display_logs(log: str):
     """Outputs verbose log messages."""
     print(f"{log}")
+
+def select_ingredients_from_available(available_ingredients: dict):
+    """
+    Displays all available ingredients and prompts the user to select
+    which ones they want to use for the current recipe run.
+    Validates selections strictly against the available ingredients pool.
+    """
+    if not available_ingredients:
+        return {}
+
+
+    print("\n--- Available Ingredients Pool ---")
+    for name, qty in available_ingredients.items():
+        print(f" - {name.title()}: {qty}")
+
+
+    selected = {}
+    print("\nWhich ingredients would you like to use for this recipe?")
+    print(
+        "Type ingredient names one by one (or type 'all' to use everything, 'done' when finished):"
+    )
+
+
+    while True:
+        user_choice = input("> ").strip().lower()
+
+
+        if user_choice == "done":
+            if not selected:
+                print(
+                    "No ingredients selected yet. Please select at least one or type 'all'."
+                )
+                continue
+            break
+        elif user_choice == "all":
+            return dict(available_ingredients)
+        elif user_choice in available_ingredients:
+            selected[user_choice] = available_ingredients[user_choice]
+            print(
+                f"-> Added '{user_choice.title()}' ({available_ingredients[user_choice]}) to recipe inputs."
+            )
+        else:
+            print(
+                f"'{user_choice}' is not in your available ingredients. Please select from the list above."
+            )
+
+
+    return selected
