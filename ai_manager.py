@@ -153,3 +153,30 @@ def validate_response(data: dict):
         return f"Confidence value {error_message}"
 
     return data
+
+
+def process(record: dict):
+    """
+    Combines the entire AI pipeline into a single function.
+    """
+
+    prompt = build_prompt(record)
+    raw_response = call_api(prompt)
+
+    if (
+        not raw_response
+        or raw_response.startswith("API Error")
+        or raw_response.startswith("\nTransport or connection exception")
+    ):
+        return False, raw_response
+
+    parsed_response = parse_response(raw_response)
+
+    if isinstance(parsed_response, str):
+        return False, parsed_response
+
+    validated_response = validate_response(parsed_response)
+    if isinstance(validated_response, str):
+        return False, validated_response
+
+    return True, validated_response
