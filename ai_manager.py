@@ -72,8 +72,7 @@ def call_api(prompt: str = ""):
         for event in interaction:
             # Check for error events
             if hasattr(event, "error") and event.error:
-                print(f"Error Code: {event.error.code}")
-                return event.error.message
+                return f"API Error ({event.error.code}): {event.error.message}"
 
             # Check if the event contains text delta chunks (successful responses)
             if (
@@ -87,7 +86,7 @@ def call_api(prompt: str = ""):
 
     except Exception as e:
         # Catches network drops or client-side issues outside the stream loop
-        return f"\nTransport or connection exception: {e}"
+        return f"Transport or connection exception: {e}"
 
 
 def parse_response(raw: str):
@@ -154,3 +153,30 @@ def validate_response(data: dict):
         return f"Confidence value {error_message}"
 
     return data
+
+
+def process(record: dict):
+    """
+    Combines the entire AI pipeline into a single function.
+    """
+
+    prompt = build_prompt(record)
+    raw_response = call_api(prompt)
+
+    if (
+        not raw_response
+        or raw_response.startswith("API Error")
+        or raw_response.startswith("\nTransport or connection exception")
+    ):
+        return False, raw_response
+
+    parsed_response = parse_response(raw_response)
+
+    if isinstance(parsed_response, str):
+        return False, parsed_response
+
+    validated_response = validate_response(parsed_response)
+    if isinstance(validated_response, str):
+        return False, validated_response
+
+    return True, validated_response
