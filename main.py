@@ -5,6 +5,37 @@ import io_manager, data_manager, ai_manager, logic_manager
 record = {}  # to be loaded
 
 # --- Functions --- #
+def recipe_pipeline(record):
+    if not record.get("ingredients"):
+        print("Please key in some ingredients. Ingredients information is missing.")
+        return
+
+
+    user_input = collect_input(record)  # add respective module
+
+
+    input_payload = {
+        **user_input,
+        "available_ingredients": list(
+  record["ingredients"].keys()
+        ),  # Needed by logic_manager
+    }
+
+
+    success, response = ai_manager.process(input_payload)  # add respective module
+
+
+    if not success:
+        io_manager.display_error(response)  # add respective module
+        return
+
+
+    combined_output = {**user_input, **response}
+    evaluated_record = logic_manager.route(combined_output)
+
+
+    # Store for memory and access previous accepted recipes
+    data_manager.save(evaluated_record) 
 
 
 # --- Main Program --- #
@@ -35,7 +66,7 @@ def main():
                 continue
             record["diet"] = io_manager.diet()
             record["allergy"] = io_manager.allergy()
-            # Call API here
+            recipe_pipeline(record)
 
         # View past (successful?) recommendations
         elif choice == 4:

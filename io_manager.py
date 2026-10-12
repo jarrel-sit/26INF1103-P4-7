@@ -167,6 +167,8 @@ def display_list(records):
         print(
             f"- {r.get('recipe_name')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
         )
+def display_error(msg):
+    print(f"\n[ERROR]: {msg}")
 
 
 def checkfield(ingredients, allergies, dietreq):
