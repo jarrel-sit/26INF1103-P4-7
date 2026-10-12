@@ -12,7 +12,7 @@ def recipe_pipeline(record):
 
 
     user_input = collect_input(record)  # add respective module
-
+      
 
     input_payload = {
         **user_input,
@@ -36,6 +36,10 @@ def recipe_pipeline(record):
 
     # Store for memory and access previous accepted recipes
     data_manager.save(evaluated_record) 
+
+
+    io_manager.display_result(evaluated_record)
+
 
 
 # --- Main Program --- #

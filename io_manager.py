@@ -169,6 +169,14 @@ def display_list(records):
         )
 def display_error(msg):
     print(f"\n[ERROR]: {msg}")
+def display_result(record):
+    print("\n" + "=" * 40)
+    print(f"RECIPE: {record.get('recipe_name', 'N/A')}")
+    print(
+        f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
+)
+    print(f"REASON: {record.get('reason', '')}")
+    print("=" * 40)
 
 
 def checkfield(ingredients, allergies, dietreq):

@@ -170,7 +170,10 @@ def route(record: dict) -> dict:
         "reason": reason,
         "score": numeric_score,
         "rule_results": results,
+        "ingredients_used": record.get("ingredients_used"),
+        "instructions": record.get("instructions")
     }
+
  
 def route_batch(records: list) -> list:
     """
