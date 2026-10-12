@@ -301,21 +301,28 @@ def save(record, filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
 def filter_by_ingredient(records, ingredient_name):
     """Returns all rows matching a given ingredient name (case-insensitive)."""
     ingredient_name = ingredient_name.strip().lower()
-    return [
-        row for row in records if row.get("ingredient", "").lower() == ingredient_name
-    ]
-
+    return query(
+        lambda row: row.get("ingredient", "").strip().lower() == ingredient_name,
+        records,
+    )
 
 def filter_by_session(records, session_id):
     """Returns all rows belonging to a specific saved session."""
-    return [row for row in records if str(row.get("session_id")) == str(session_id)]
+    target = str(session_id).strip()
+    return query(lambda row: str(row.get("session_id", "")).strip() == target, records)
+
+def filter_by_success(filepath=DEFAULT_RECIPES_FILEPATH):
+    """Returns all matching recipe rows with successful evaluation via business rules."""
+    return query(lambda record: record.get("outcome") == "accept", records)
 
 
-def get_unique_ingredients(records):
-    """Returns a sorted list of every distinct ingredient ever saved."""
-    return sorted(
-        {row.get("ingredient", "") for row in records if row.get("ingredient")}
-    )
+def query(filter_fn, records):
+    """
+    Accepts a filter function and returns all matching records.
+    Example: query(lambda r: r["outcome"] == "accept")
+    """
+    return [record for record in records if filter_fn(record)]
+
 
 
 # ---------------------------------------------------------------------------
