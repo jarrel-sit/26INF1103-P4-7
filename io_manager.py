@@ -320,3 +320,8 @@ def past_recipes_menu(options=4):
         if choice.isdigit() and int(choice) <= options and int(choice) > 0:
             return int(choice)
         print("Invalid option selected. Please try again.")
+
+
+def prompt_ingredient_query():
+    """Prompts the user for an ingredient name to filter past recipes."""
+    return input("Enter the ingredient name to search for: ").strip()
