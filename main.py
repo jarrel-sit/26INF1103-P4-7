@@ -4,7 +4,8 @@ import io_manager, data_manager, ai_manager, logic_manager
 # --- Variables & Constants --- #
 record = data_manager.load_records()  # initialize
 recipes = data_manager.load()
-
+print(record)
+# print(record['ingredients'])
 
 # --- Functions --- #
 def recipe_pipeline(record):
@@ -36,10 +37,10 @@ def recipe_pipeline(record):
     io_manager.display_result(evaluated_record)
 
 
-def add_ingredients(ingredients):
+def add_ingredients():
     ingredients = io_manager.ingredient_input(
-        success_message="Updated the ingredients list!",
-        failed_message="No new ingredients were added. ",
+        success_message="\nUpdated the ingredients list!",
+        failure_message="No new ingredients were added. ",
     )
 
     if ingredients:
@@ -65,10 +66,11 @@ def main():
 
         # Adding of new ingredients
         if choice == 1:
-            record["ingredients"] = add_ingredients(record["ingredients"])
+            add_ingredients()
 
         # List all ingredients
         elif choice == 2:
+            record = data_manager.load_records()
             io_manager.display_ingredients(record)
 
         # AI Recipe recommendation
