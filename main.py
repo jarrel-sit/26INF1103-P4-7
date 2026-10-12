@@ -26,11 +26,13 @@ def recipe_pipeline(record):
         io_manager.display_error(response)  # add respective module
         return
 
-    combined_output = {**user_input, **response}
+    combined_output = {**input_payload, **response}
     evaluated_record = logic_manager.route(combined_output)
 
     # Store for memory and access previous accepted recipes
     data_manager.save(evaluated_record)
+
+    io_manager.display_result(evaluated_record)
 
 
 # --- Main Program --- #

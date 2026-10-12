@@ -46,10 +46,10 @@ def build_prompt(record: dict):
 
     Diets: {', '.join(record['diets']) if record['diets'] else 'None'},
 
-    Serving size: {record['pax']}
+    Serving size: {record['pax'] if record['pax'] else '1'},
   
     The response should be in JSON format with the following keys: 
-    'recipe', 'ingredients', 'instructions', 'confidence', 'hazardous_ingredients', 'insufficient_ingredients', and 'equipment'.
+    {', '.join(REQUIRED_KEYS)}
     """
 
     return prompt

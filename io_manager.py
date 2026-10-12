@@ -134,7 +134,11 @@ def ingredient_input(
                 name = match.group(1)
 
                 # Adds name and quantity to dictionary
-                if match.group(2).isnumeric() and match.group(3) == "ml" or match.group(3) == "g":
+                if (
+                    match.group(2).isnumeric()
+                    and match.group(3) == "ml"
+                    or match.group(3) == "g"
+                ):
                     quantity = match.group(2) + match.group(3)
                     ingredients_list[name] = quantity
 
@@ -161,14 +165,28 @@ def display_ingredients(record):
     print("\n--- Current Available Ingredients ---")
     for item, qty in ingredients.items():
         print(f" - {item.title()}: {qty}")
+
+
 def display_list(records):
     print(f"\n--- Saved Records ({len(records)}) ---")
     for r in records:
         print(
             f"- {r.get('recipe_name')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
         )
+
+
 def display_error(msg):
     print(f"\n[ERROR]: {msg}")
+
+
+def display_result(record):
+    print("\n" + "=" * 40)
+    print(f"RECIPE: {record.get('recipe_name', 'N/A')}")
+    print(
+        f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
+    )
+    print(f"REASON: {record.get('reason', '')}")
+    print("=" * 40)
 
 
 def checkfield(ingredients, allergies, dietreq):
@@ -219,6 +237,7 @@ def display_logs(log: str):
     """Outputs verbose log messages."""
     print(f"{log}")
 
+
 def select_ingredients_from_available(available_ingredients: dict):
     """
     Displays all available ingredients and prompts the user to select
@@ -228,11 +247,9 @@ def select_ingredients_from_available(available_ingredients: dict):
     if not available_ingredients:
         return {}
 
-
     print("\n--- Available Ingredients Pool ---")
     for name, qty in available_ingredients.items():
         print(f" - {name.title()}: {qty}")
-
 
     selected = {}
     print("\nWhich ingredients would you like to use for this recipe?")
@@ -240,10 +257,8 @@ def select_ingredients_from_available(available_ingredients: dict):
         "Type ingredient names one by one (or type 'all' to use everything, 'done' when finished):"
     )
 
-
     while True:
         user_choice = input("> ").strip().lower()
-
 
         if user_choice == "done":
             if not selected:
@@ -264,22 +279,19 @@ def select_ingredients_from_available(available_ingredients: dict):
                 f"'{user_choice}' is not in your available ingredients. Please select from the list above."
             )
 
-
     return selected
+
 
 def collect_input(record: dict):
     """Combines all input prompts into one standard record dict."""
     # pax_val = input("How many pax is this meal for? ").strip()
     # pax_num = int(pax_val) if pax_val.isdigit() else 1
 
-
     ingredient_list = select_ingredients_from_available(record)
     allergies_list = allergy()
     diet_list = diet()
 
-
     ## cooking time??
-
 
     return {
         # "pax": pax_num,
@@ -289,6 +301,7 @@ def collect_input(record: dict):
         "dietary_preferences": diet_list,
         # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY
     }
+
 
 def past_recipes_menu(options=4):
     """Displays the submenu for filtering past recipes."""
