@@ -169,14 +169,6 @@ def display_list(records):
         )
 def display_error(msg):
     print(f"\n[ERROR]: {msg}")
-def display_result(record):
-    print("\n" + "=" * 40)
-    print(f"RECIPE: {record.get('recipe_name', 'N/A')}")
-    print(
-        f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
-)
-    print(f"REASON: {record.get('reason', '')}")
-    print("=" * 40)
 
 
 def checkfield(ingredients, allergies, dietreq):
@@ -297,3 +289,21 @@ def collect_input(record: dict):
         "dietary_preferences": diet_list,
         # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY
     }
+
+def past_recipes_menu(options=4):
+    """Displays the submenu for filtering past recipes."""
+    print("""
+=================================
+|      Past Recipes Submenu     |
+|-------------------------------|
+|  1. View All Saved Recipes    |
+|  2. View Successful Only      |
+|  3. Filter by Ingredient      |
+|  4. Back to Main Menu         |
+=================================""")
+
+    while True:
+        choice = input("\nSelect option: ").strip()
+        if choice.isdigit() and int(choice) <= options and int(choice) > 0:
+            return int(choice)
+        print("Invalid option selected. Please try again.")

@@ -2,7 +2,7 @@
 import io_manager, data_manager, ai_manager, logic_manager
 
 # --- Variables & Constants --- #
-record = {}  # to be loaded
+record = data_manager.load_records()  # initialize
 
 
 # --- Functions --- #
@@ -31,10 +31,6 @@ def recipe_pipeline(record):
 
     # Store for memory and access previous accepted recipes
     data_manager.save(evaluated_record)
-
-
-    io_manager.display_result(evaluated_record)
-
 
 
 # --- Main Program --- #
