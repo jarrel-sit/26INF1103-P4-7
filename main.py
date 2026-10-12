@@ -3,6 +3,7 @@ import io_manager, data_manager, ai_manager, logic_manager
 
 # --- Variables & Constants --- #
 record = data_manager.load_records()  # initialize
+recipes = data_manager.load()
 
 
 # --- Functions --- #
@@ -80,19 +81,21 @@ def main():
                 sub_choice = io_manager.past_recipes_menu()
 
                 if sub_choice == 1:
-                    past_recipes = data_manager.load()
-                    io_manager.display_list(past_recipes)
+                    io_manager.display_list(recipes)
 
                 elif sub_choice == 2:
-                    past_recipes = data_manager.load()
-                    successful_recipes = data_manager.filter_by_success(past_recipes)
+                    successful_recipes = data_manager.filter_by_success(recipes)
                     io_manager.display_list(successful_recipes)
 
                 elif sub_choice == 3:
                     ingredient_query = io_manager.prompt_ingredient_query()
                     if ingredient_query:
-                        filtered_recipes = data_manager.filter_by_ingredient(ingredient_query)
+                        filtered_recipes = data_manager.filter_by_ingredient(
+                            recipes, ingredient_query
+                        )
+
                         io_manager.display_list(filtered_recipes)
+
                     else:
                         io_manager.display_error("Ingredient query cannot be empty.")
 
