@@ -35,6 +35,25 @@ def recipe_pipeline(record):
     io_manager.display_result(evaluated_record)
 
 
+def add_ingredients(ingredients):
+    ingredients = io_manager.ingredient_input(
+        success_message="Updated the ingredients list!",
+        failed_message="No new ingredients were added. ",
+    )
+
+    if ingredients:
+        success = data_manager.save_ingredients(ingredients)
+
+        if success:
+            io_manager.display_logs(
+                "Successfully saved ingredients to persistent storage."
+            )
+        else:
+            io_manager.display_error("Failed to save ingredients to disk.")
+
+    return ingredients
+
+
 # --- Main Program --- #
 def main():
     while True:
@@ -45,10 +64,7 @@ def main():
 
         # Adding of new ingredients
         if choice == 1:
-            record["ingredients"] = io_manager.ingredient_input(
-                success_message="Updated the ingredients list!",
-                failure_message="No new ingredients were added. ",
-            )
+            record["ingredients"] = add_ingredients(record["ingredients"])
 
         # List all ingredients
         elif choice == 2:
