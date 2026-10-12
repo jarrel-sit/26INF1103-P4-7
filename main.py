@@ -1,34 +1,22 @@
 # --- Imports --- #
 import io_manager, data_manager, ai_manager, logic_manager
 
-# --- Variables & Constants --- #
-record = data_manager.load_records()  # initialize
-recipes = data_manager.load()
-print(record)
-# print(record['ingredients'])
 
 # --- Functions --- #
 def recipe_pipeline(record):
-    if not record.get("ingredients"):
+    if not record:
         print("Please key in some ingredients. Ingredients information is missing.")
         return
 
     user_input = io_manager.collect_input(record)  # add respective module
 
-    input_payload = {
-        **user_input,
-        "available_ingredients": list(
-            record["ingredients"].keys()
-        ),  # Needed by logic_manager
-    }
-
-    success, response = ai_manager.process(input_payload)  # add respective module
+    success, response = ai_manager.process(user_input)  # add respective module
 
     if not success:
         io_manager.display_error(response)  # add respective module
         return
 
-    combined_output = {**input_payload, **response}
+    combined_output = {**user_input, **response}
     evaluated_record = logic_manager.route(combined_output)
 
     # Store for memory and access previous accepted recipes
@@ -53,11 +41,16 @@ def add_ingredients():
         else:
             io_manager.display_error("Failed to save ingredients to disk.")
 
-    return ingredients
+    return data_manager.load_records()
 
 
 # --- Main Program --- #
 def main():
+    # --- Variables & Constants --- #
+    record = data_manager.load_records()  # initialize
+    recipes = data_manager.load()
+
+    # --- Program Code --- #
     while True:
 
         # menu -> ask for innput -> function -> respective output (recommendation/listing of ingredients) -> data manipulation
@@ -66,11 +59,10 @@ def main():
 
         # Adding of new ingredients
         if choice == 1:
-            add_ingredients()
+            record = add_ingredients()
 
         # List all ingredients
         elif choice == 2:
-            record = data_manager.load_records()
             io_manager.display_ingredients(record)
 
         # AI Recipe recommendation

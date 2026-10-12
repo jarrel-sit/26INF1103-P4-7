@@ -164,7 +164,7 @@ def display_ingredients(record):
         ingredients = record
 
     elif isinstance(record, dict):
-        ingredients = record.get('ingredients', [])
+        ingredients = record.get("ingredients", [])
 
     print("\n--- Current Available Ingredients ---")
     for item in ingredients:
@@ -242,7 +242,7 @@ def display_logs(log: str):
     print(f"{log}")
 
 
-def select_ingredients_from_available(available_ingredients: dict):
+def select_ingredients_from_available(available_ingredients):
     """
     Displays all available ingredients and prompts the user to select
     which ones they want to use for the current recipe run.
@@ -251,9 +251,18 @@ def select_ingredients_from_available(available_ingredients: dict):
     if not available_ingredients:
         return {}
 
+    ingredients = {}
+
+    for row in available_ingredients:
+        name = row.get("ingredient").strip()
+        ingredients[name] = row.get("quantity")
+
+    if not ingredients:
+        return {}
+
     print("\n--- Available Ingredients Pool ---")
-    for name, qty in available_ingredients.items():
-        print(f" - {name.title()}: {qty}")
+    for item, qty in ingredients.items():
+        print(f" - {item}: {qty}")
 
     selected = {}
     print("\nWhich ingredients would you like to use for this recipe?")
@@ -266,17 +275,17 @@ def select_ingredients_from_available(available_ingredients: dict):
 
         if user_choice == "done":
             if not selected:
-                print(
-                    "No ingredients selected yet. Please select at least one or type 'all'."
-                )
-                continue
+                print("No ingredients selected yet. Returning back to main menu...")
             break
+
         elif user_choice == "all":
-            return dict(available_ingredients)
-        elif user_choice in available_ingredients:
-            selected[user_choice] = available_ingredients[user_choice]
+            return ingredients
+
+        elif user_choice in ingredients.keys():
+            selected[user_choice] = ingredients[user_choice]
+
             print(
-                f"-> Added '{user_choice.title()}' ({available_ingredients[user_choice]}) to recipe inputs."
+                f"-> Added '{user_choice}' ({ingredients[user_choice]}) to recipe inputs."
             )
         else:
             print(
@@ -286,7 +295,7 @@ def select_ingredients_from_available(available_ingredients: dict):
     return selected
 
 
-def collect_input(record: dict):
+def collect_input(record):
     """Combines all input prompts into one standard record dict."""
     # pax_val = input("How many pax is this meal for? ").strip()
     # pax_num = int(pax_val) if pax_val.isdigit() else 1
@@ -300,7 +309,9 @@ def collect_input(record: dict):
     return {
         # "pax": pax_num,
         "ingredients": ingredient_list,
-        "available_ingredients": list(record.keys()),
+        "available_ingredients": [
+            {row.get("ingredient"), row.get("quantity")} for row in record
+        ],
         "allergies": allergies_list,
         "dietary_preferences": diet_list,
         # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY
