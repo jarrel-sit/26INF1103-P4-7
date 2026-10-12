@@ -156,15 +156,19 @@ def ingredient_input(
 
 
 def display_ingredients(record):
-    ingredients = record.get("ingredients", {})
-
-    if not ingredients:
+    if not record:
         print("\nYou have not added any ingredients yet.")
-
         return
+
+    if isinstance(record, list):
+        ingredients = record
+
+    elif isinstance(record, dict):
+        ingredients = record.get('ingredients', [])
+
     print("\n--- Current Available Ingredients ---")
-    for item, qty in ingredients.items():
-        print(f" - {item.title()}: {qty}")
+    for item in ingredients:
+        print(f" - {item['ingredient']}: {item['quantity']}")
 
 
 def display_list(records):
