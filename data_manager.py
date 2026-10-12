@@ -311,7 +311,7 @@ def filter_by_session(records, session_id):
     target = str(session_id).strip()
     return query(lambda row: str(row.get("session_id", "")).strip() == target, records)
 
-def filter_by_success(filepath=DEFAULT_RECIPES_FILEPATH):
+def filter_by_success(records):
     """Returns all matching recipe rows with successful evaluation via business rules."""
     return query(lambda record: record.get("outcome") == "accept", records)
 
