@@ -8,7 +8,7 @@ import ai_manager
 
 
 # ==========================================
-# 1. LOGIC MANAGER TESTS (Core Requirement 5.3)
+# 1. LOGIC MANAGER TESTS
 # ==========================================
 def test_logic_manager_success_routing():
     """Test that a fully compliant hardcoded AI response is evaluated and routed as 'accept'."""
@@ -44,3 +44,59 @@ def test_logic_manager_allergy_failure():
     result = logic_manager.route(record)
     assert result["outcome"] == "reject"
     assert "allergy conflict" in result["reason"].lower()
+
+    # ==========================================
+# 2. DATA MANAGER PERSISTENCE TESTS
+# ==========================================
+def test_data_manager_save_and_load_success():
+    """Test successful saving and loading of recipe records using flat files."""
+    test_recipe_file = "test_recipe_data.csv"
+    if os.path.exists(test_recipe_file):
+        os.remove(test_recipe_file)
+
+    sample_recipe = {
+        "recipe": "Test Omelette",
+        "outcome": "accept",
+        "score": 90.5,
+        "reason": "all business rules passed",
+        "ingredients": {"egg": "2", "butter": "10g"},
+        "instructions": {"1": {"step": "Beat eggs and fry", "time_taken": "5min"}}
+    }
+    
+    # Save record
+    saved = data_manager.save_recipe(sample_recipe, filepath=test_recipe_file)
+    assert saved is True, "Failed to save record."
+
+    # Load records back
+    records = data_manager.load_recipes(filepath=test_recipe_file)
+    assert len(records) == 1, f"Expected 1 record, got {len(records)}"
+    assert records[0]["recipe"] == "Test Omelette"
+
+    # Cleanup
+    if os.path.exists(test_recipe_file):
+        os.remove(test_recipe_file)
+
+
+def test_data_manager_corrupt_file_handling():
+    """Test that data_manager handles corrupted files gracefully without crashing."""
+    test_recipe_file = "test_recipe_data.csv"
+    with open(test_recipe_file, "w", encoding="utf-8") as f:
+        f.write("corrupt,csv,data,without,proper,headers\ninvalid_row")
+
+    records = data_manager.load_recipes(filepath=test_recipe_file)
+    assert records == [], "Expected corrupt file to return an empty list."
+
+    if os.path.exists(test_recipe_file):
+        os.remove(test_recipe_file)
+
+
+def test_query_and_filters():
+    """Test querying and success filtering functions."""
+    records = [
+        {"recipe": "Recipe A", "outcome": "accept", "ingredients": {"chicken": "100g"}},
+        {"recipe": "Recipe B", "outcome": "reject", "ingredients": {"peanuts": "50g"}},
+    ]
+    
+    successful = data_manager.filter_by_success(records)
+    assert len(successful) == 1
+    assert successful[0]["recipe"] == "Recipe A"
