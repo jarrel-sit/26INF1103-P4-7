@@ -20,7 +20,7 @@ def recipe_pipeline(record):
     evaluated_record = logic_manager.route(combined_output)
 
     # Store for memory and access previous accepted recipes
-    data_manager.save(evaluated_record)
+    data_manager.save_recipe(evaluated_record)
 
     io_manager.display_result(evaluated_record)
 
@@ -41,14 +41,14 @@ def add_ingredients():
         else:
             io_manager.display_error("Failed to save ingredients to disk.")
 
-    return data_manager.load_records()
+    return data_manager.load_ingredients()
 
 
 # --- Main Program --- #
 def main():
     # --- Variables & Constants --- #
-    record = data_manager.load_records()  # initialize
-    recipes = data_manager.load()
+    record = data_manager.load_ingredients()
+    recipes = data_manager.load_recipes()
 
     # --- Program Code --- #
     while True:
