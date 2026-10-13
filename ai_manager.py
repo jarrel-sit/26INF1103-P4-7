@@ -31,14 +31,22 @@ def build_prompt(record: dict):
     # Build the prompt string with the provided ingredients
     prompt = f"""You are a recipe generator. Generate a recipe using this list of ingredients and their provided amounts. 
     Not all ingredients/amounts have to be used to completion for each recipe but do not include ingredients or 
-    quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 
-    Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
+    quantities not listed. Take into consideration the user's dietary preferences and allergies inputted below 
+    as well. Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
     online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
     utensils needed, and time taken for each step of the recipe. Include how much of each ingredient is used 
     in each step while describing the step. If there are not enough ingredients to make a legitimate recipe, 
     indicate true in the JSON file, otherwise indicate false. Remove any hazardous or inedible ingredients. 
     and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
-    from 0 to 1 for evaluating it's usability.
+    from 0 to 1 for evaluating it's usability. 
+
+    If the recipe detects a conflict in dietary preferences/allergies and ingredients provided, try to avoid using them
+    and put them into hazardous ingredients list. If it is possible to avoid the conflict, carry on as per 
+    normal and return original outputs.
+    
+    However, if the recipe has to have ingredients provided that conflicts with dietary preferences/allergies, do not include 
+    the conflicting dietary preferences/allergies within the response. The hazardous ingredients should also contain the 
+    conflicting ingredients, then the confidence score should be strictly marked down in the case of conflict. 
     
     Ingredients: {', '.join(
         f"{ingredient} ({quantity})" for ingredient, quantity in record['ingredients'].items() 
@@ -58,6 +66,10 @@ def build_prompt(record: dict):
         1: {{ step: 'Instruction 1', time_taken: '5min' }}, 
         2: {{ step: 'Instruction 2', time_taken: '2min' }},
     }}
+
+    Examples of dietary preferences/allergies should be formatted as:
+    dietary_preferences: ['halal', 'vegetarian']
+    allergies: ['fish', 'peanuts']
     """
 
     return prompt
@@ -119,6 +131,8 @@ def parse_response(raw: str):
     # Remove `json` header to parse
     if raw.startswith("json"):
         cleaned = raw[4:]
+
+    print(cleaned)
 
     # Parse the response as JSON and handle any parsing errors
     try:

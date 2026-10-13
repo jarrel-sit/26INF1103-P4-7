@@ -16,7 +16,7 @@ def recipe_pipeline(record, logger):
 
     if not success:
         io_manager.display_error(response)  # add respective module
-        return
+        return data_manager.load_recipes(logger=logger)
 
     combined_output = {**user_input, **response}
     evaluated_record = logic_manager.route(combined_output)
@@ -101,7 +101,9 @@ def main(logger):
                         )
 
                     else:
-                        io_manager.display_logs("Ingredient query is empty. Returning...")
+                        io_manager.display_logs(
+                            "Ingredient query is empty. Returning..."
+                        )
 
                 elif sub_choice == 4:
                     break  # Exit back to main menu

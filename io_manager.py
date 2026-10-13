@@ -217,7 +217,13 @@ def display_result(record):
         f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
     )
     print(f"REASON: {record.get('reason', '')}")
+
+    if record.get('outcome') == "reject":
+        print("!!! USE AT YOUR OWN RISK !!!")
+
     print("=" * 55)
+
+    
 
     print("\n--- Ingredients Used ---")
     ingredients = record.get("ingredients", {})
