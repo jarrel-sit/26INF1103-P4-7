@@ -100,3 +100,23 @@ def test_query_and_filters():
     successful = data_manager.filter_by_success(records)
     assert len(successful) == 1
     assert successful[0]["recipe"] == "Recipe A"
+
+# ==========================================
+# 3. AI MANAGER VALIDATION & PARSING TESTS
+# ==========================================
+def test_ai_schema_validation_failure():
+    """Test that missing required keys in hardcoded AI data are correctly caught and rejected."""
+    incomplete_data = {
+        "recipe": "Bad Recipe",
+    }
+    validation_result = ai_manager.validate_response(incomplete_data)
+    assert isinstance(validation_result, str)
+    assert "Missing keys" in validation_result
+
+
+def test_ai_parse_response_malformed_json():
+    """Test that parse_response safely catches bad JSON strings without crashing."""
+    bad_raw_response = "This is not valid json text"
+    result = ai_manager.parse_response(bad_raw_response)
+    assert isinstance(result, str)
+    assert "JSON parsing error" in result
