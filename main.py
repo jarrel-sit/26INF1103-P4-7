@@ -10,13 +10,16 @@ def recipe_pipeline(record, logger):
         )
         return
 
-    user_input = io_manager.collect_input(record)  # add respective module
+    user_input = io_manager.collect_input(record)
 
-    success, response = ai_manager.process(user_input)  # add respective module
+    if not user_input:
+        return
+
+    success, response = ai_manager.process(user_input)
 
     if not success:
-        io_manager.display_error(response)  # add respective module
-        return
+        io_manager.display_error(response)
+        return data_manager.load_recipes(logger=logger)
 
     combined_output = {**user_input, **response}
     evaluated_record = logic_manager.route(combined_output)
@@ -83,7 +86,10 @@ def main(logger):
 
                 elif sub_choice == 2:
                     successful_recipes = data_manager.filter_by_success(recipes)
-                    io_manager.display_list(successful_recipes)
+                    io_manager.display_list(
+                        successful_recipes,
+                        message="There are no saved recipes that contain the query. ",
+                    )
 
                 elif sub_choice == 3:
                     ingredient_query = io_manager.prompt_ingredient_query()
@@ -92,10 +98,15 @@ def main(logger):
                             recipes, ingredient_query
                         )
 
-                        io_manager.display_list(filtered_recipes)
+                        io_manager.display_list(
+                            filtered_recipes,
+                            message="There are no saved recipes that contain the query. ",
+                        )
 
                     else:
-                        io_manager.display_error("Ingredient query cannot be empty.")
+                        io_manager.display_logs(
+                            "Ingredient query is empty. Returning..."
+                        )
 
                 elif sub_choice == 4:
                     break  # Exit back to main menu

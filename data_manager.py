@@ -130,7 +130,7 @@ def load_recipes(
 
     def process_recipes_row(row):
         row["score"] = float(row.get("score", 0.0))
-        row["ingredients_used"] = json.loads(row.get("ingredients_used", "[]"))
+        row["ingredients"] = json.loads(row.get("ingredients", "[]"))
         row["instructions"] = json.loads(row.get("instructions", "[]"))
         return row
 
@@ -162,7 +162,7 @@ def save(filepath, fieldnames, data, mode="a", logger=None):
     """Saves all records to specified CSV spreadsheet."""
 
     if not os.path.exists(filepath):
-        _create_empty_file(filepath, logger)
+        _create_empty_file(filepath, fieldnames, logger=logger)
 
     try:
         with open(filepath, mode=mode, newline="", encoding="utf-8") as file:
@@ -290,7 +290,7 @@ def filter_by_ingredient(records, ingredient_name):
     ingredient_name = ingredient_name.strip().lower()
 
     def matches(record):
-        ingredients = json.loads(record.get("ingredients"))
+        ingredients = record.get("ingredients")
 
         for name in ingredients:
             if ingredient_name in str(name).strip().lower():
