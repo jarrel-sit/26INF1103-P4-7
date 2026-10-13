@@ -1,5 +1,5 @@
 # Imports
-import re
+import re, json
 
 # Input Handling
 # def pax():
@@ -169,11 +169,44 @@ def display_ingredients(record):
 
 
 def display_list(records):
-    print(f"\n--- Saved Records ({len(records)}) ---")
-    for r in records:
-        print(
-            f"- {r.get('recipe')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
+    if not records:
+        print("\nThere are no saved recipes.")
+        return
+
+    while True:
+        print(f"\n--- Saved Records ({len(records)}) ---")
+
+        for i, r in enumerate(records, 1):
+            print(
+                f"{i}. {r.get('recipe')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
+            )
+
+        choice = input(
+            "\nEnter the number of the recipe that you want to view (type 'back' to exit): "
         )
+
+        if choice == "back":
+            print("Returning...")
+            break
+
+        if choice.isdigit():
+            index = int(choice)
+
+            if 1 <= index <= len(records):
+                selected = records[index - 1]
+
+                if isinstance(selected["ingredients"], str):
+                    selected["ingredients"] = json.loads(selected["ingredients"])
+
+                display_result(selected)
+
+            else:
+                print(
+                    f"Invalid selection. Please enter a valid number between 1 and {len(records)}."
+                )
+
+        else:
+            print("Invalid input. Please enter a valid number or 'back'.")
 
 
 def display_error(msg):
