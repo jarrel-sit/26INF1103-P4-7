@@ -162,7 +162,7 @@ def save(filepath, fieldnames, data, mode="a", logger=None):
     """Saves all records to specified CSV spreadsheet."""
 
     if not os.path.exists(filepath):
-        _create_empty_file(filepath, logger)
+        _create_empty_file(filepath, fieldnames, logger=logger)
 
     try:
         with open(filepath, mode=mode, newline="", encoding="utf-8") as file:
