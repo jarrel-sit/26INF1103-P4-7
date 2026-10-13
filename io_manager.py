@@ -147,9 +147,6 @@ def ingredient_input(
                         f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
                     )
 
-                # Uncomment to see what enters ingredients_list
-                # print(ingredients_list)
-
             else:
                 # Prompts user to input again if user gives rubbish format
                 print("Invalid input. Please try again.")
@@ -210,20 +207,6 @@ def display_result(record):
 
     print()
     print("=" * 55)
-
-
-def checkfield(ingredients, allergies, dietreq):
-    allinputs = {  # "pax": serving,
-        "ingredients": ingredients,
-        "allergies": allergies,
-        "diet": dietreq,
-    }
-
-    # if not allinputs.get("pax"):
-    #     print("Please key in the serving size. Serving size information is missing.")
-
-
-# checkfield(ingredients, allergies,dietreq)
 
 
 def validate_menu(choice, options):
@@ -316,14 +299,10 @@ def select_ingredients_from_available(available_ingredients):
 
 def collect_input(record):
     """Combines all input prompts into one standard record dict."""
-    # pax_val = input("How many pax is this meal for? ").strip()
-    # pax_num = int(pax_val) if pax_val.isdigit() else 1
 
     selected_ingredients, ingredient_list = select_ingredients_from_available(record)
     allergies_list = allergy()
     diet_list = diet()
-
-    ## cooking time??
 
     return {
         # "pax": pax_num,
@@ -331,7 +310,6 @@ def collect_input(record):
         "available_ingredients": ingredient_list,
         "allergies": allergies_list,
         "dietary_preferences": diet_list,
-        # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY
     }
 
 

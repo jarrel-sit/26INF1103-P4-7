@@ -29,7 +29,6 @@ def build_prompt(record: dict):
     """
 
     # Build the prompt string with the provided ingredients
-    # TODO: Revamp prompt to include any additional input fields if necessary
     prompt = f"""You are a recipe generator. Generate a recipe using this list of ingredients and their provided amounts. 
     Not all ingredients/amounts have to be used to completion for each recipe but do not include ingredients or 
     quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 

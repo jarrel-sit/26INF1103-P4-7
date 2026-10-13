@@ -292,8 +292,6 @@ def filter_by_ingredient(records, ingredient_name):
     def matches(record):
         ingredients = json.loads(record.get("ingredients"))
 
-        print(ingredients)
-
         for name in ingredients:
             if ingredient_name in str(name).strip().lower():
                 return True
@@ -320,30 +318,3 @@ def query(filter_fn, records):
     Example: query(lambda r: r["outcome"] == "accept")
     """
     return [record for record in records if filter_fn(record)]
-
-
-# ---------------------------------------------------------------------------
-# Demo / integration with io_manager
-# ---------------------------------------------------------------------------
-
-# if __name__ == "__main__":
-#     from io_manager import ingredient_input
-
-#     # 2. Load whatever memory already exists from previous runs.
-#     existing_records = load_records()
-
-#     # Collect this session's ingredients via io_manager.
-#     user_ingredients = ingredient_input()
-
-#     # 1. Save this session's processed ingredients to the spreadsheet.
-#     save_ingredients(user_ingredients)
-
-#     # 3. Demonstrate a query: show every past session that used "sugar".
-#     all_records = load_records()
-#     sugar_rows = filter_by_ingredient(all_records, "sugar")
-#     if sugar_rows:
-#         print(f"\n[Data Manager] Found {len(sugar_rows)} past record(s) using 'sugar':")
-#         for row in sugar_rows:
-#             print(
-#                 f"  - Session {row['session_id']} ({row['timestamp']}): {row['quantity']}"
-#             )

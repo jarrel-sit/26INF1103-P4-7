@@ -5,7 +5,9 @@ import io_manager, data_manager, ai_manager, logic_manager
 # --- Functions --- #
 def recipe_pipeline(record, logger):
     if not record:
-        print("Please key in some ingredients. Ingredients information is missing.")
+        io_manager.display_error(
+            "Please key in some ingredients. Ingredients information is missing."
+        )
         return
 
     user_input = io_manager.collect_input(record)  # add respective module
@@ -105,9 +107,3 @@ def main(logger):
 
 if __name__ == "__main__":
     main(io_manager.display_logs)
-# Function Calls from io_manager.py
-# diet = io_manager.diet()
-# allergy = io_manager.allergy()
-# ingredient_input = io_manager.ingredient_input()
-# pax = io_manager.pax()
-# checkfield = io_manager.checkfield()
