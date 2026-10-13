@@ -290,7 +290,7 @@ def filter_by_ingredient(records, ingredient_name):
     ingredient_name = ingredient_name.strip().lower()
 
     def matches(record):
-        ingredients = json.loads(record.get("ingredients"))
+        ingredients = record.get("ingredients")
 
         for name in ingredients:
             if ingredient_name in str(name).strip().lower():

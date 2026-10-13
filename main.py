@@ -83,7 +83,10 @@ def main(logger):
 
                 elif sub_choice == 2:
                     successful_recipes = data_manager.filter_by_success(recipes)
-                    io_manager.display_list(successful_recipes)
+                    io_manager.display_list(
+                        successful_recipes,
+                        message="There are no saved recipes that contain the query. ",
+                    )
 
                 elif sub_choice == 3:
                     ingredient_query = io_manager.prompt_ingredient_query()
@@ -92,10 +95,13 @@ def main(logger):
                             recipes, ingredient_query
                         )
 
-                        io_manager.display_list(filtered_recipes)
+                        io_manager.display_list(
+                            filtered_recipes,
+                            message="There are no saved recipes that contain the query. ",
+                        )
 
                     else:
-                        io_manager.display_error("Ingredient query cannot be empty.")
+                        io_manager.display_logs("Ingredient query is empty. Returning...")
 
                 elif sub_choice == 4:
                     break  # Exit back to main menu
