@@ -1,6 +1,5 @@
 # --- Imports --- #
 from google import genai
-from google.genai import errors
 from dotenv import load_dotenv
 import os, json, time
 
@@ -11,14 +10,15 @@ API_KEY = os.getenv("GENAI_API_KEY")
 
 # --- Constants --- #
 CLIENT = genai.Client(api_key=API_KEY)
-REQUIRED_KEYS = [
-    "recipe",
-    "ingredients",
-    "instructions",
-    "confidence",
-    "hazardous_ingredients",
-    "equipment",
-]  # placeholder for now, to be updated with actual input from user if necessary
+REQUIRED_KEYS = {
+    "recipe": "str",
+    "ingredients": "dict",
+    "instructions": "dict",
+    "confidence": "int or float",
+    "hazardous_ingredients": "dict",
+    "equipment": "list",
+    "insufficient_ingredients": "bool",
+}
 
 
 # --- Functions --- #
@@ -34,7 +34,9 @@ def build_prompt(record: dict):
     quantities not listed. Take into consideration the user's diets and allergies inputted below as well. 
     Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
     online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
-    utensils needed, and time taken for each step of the recipe.Include how much of each ingredient is used in each step while describing the step. If there are not enough ingredients to make a legitimate recipe, indicate true in the JSON file, otherwise indicate false. Remove any hazardous or inedible ingredients. 
+    utensils needed, and time taken for each step of the recipe. Include how much of each ingredient is used 
+    in each step while describing the step. If there are not enough ingredients to make a legitimate recipe, 
+    indicate true in the JSON file, otherwise indicate false. Remove any hazardous or inedible ingredients. 
     and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
     from 0 to 1 for evaluating it's usability.
     
@@ -48,8 +50,14 @@ def build_prompt(record: dict):
 
     Serving size: {record['pax'] if record.get('pax') else '1'},
   
-    The response should be in JSON format with the following keys: 
-    {', '.join(REQUIRED_KEYS)}
+    The response should be in JSON format with the following keys and types: 
+    {', '.join([f'{key}: {value}' for key, value in REQUIRED_KEYS.items()])}
+
+    Examples of instructions should be formatted as: 
+    instructions: {{
+        1: {{ step: 'Instruction 1', time_taken: '5min' }}, 
+        2: {{ step: 'Instruction 2', time_taken: '2min' }},
+    }}
     """
 
     return prompt
@@ -108,56 +116,83 @@ def parse_response(raw: str):
     if raw.startswith("```") or raw.endswith("```"):
         raw = raw.strip("```").strip()
 
+    # Remove `json` header to parse
+    if raw.startswith("json"):
+        cleaned = raw[4:]
+
     # Parse the response as JSON and handle any parsing errors
     try:
-        return json.loads(raw)
+        return json.loads(cleaned)
 
     except json.JSONDecodeError as e:
-        return f"JSON parsing error: {e} \nResponse content: {raw}"
+        return f"JSON parsing error: {e} \nResponse content: {cleaned}"
 
 
 def validate_response(data: dict):
     """
     Function to validate the parsed response from the API.
     """
+    error_header = "Validation Error:"
 
     # Validate that the parsed response is a dictionary and contains all required keys
     if not isinstance(data, dict):
-        return "Parsed response is not a dictionary."
+        return f"{error_header} Parsed response is not a dictionary."
 
-    missing_keys = [key for key in REQUIRED_KEYS if key not in data]
+    missing_keys = [key for key in REQUIRED_KEYS.keys() if key not in data]
 
     if missing_keys:
-        return f"Missing keys in the response: {', '.join(missing_keys)}"
+        return f"{error_header} Missing keys in the response: {', '.join(missing_keys)}"
 
     # Validate each required key for presence and correct type
     error_message = "is missing or not of the expected type."
 
-    if (
-        data.get("recipe") is None
-        or not isinstance(data.get("recipe"), str)
-        or data.get("recipe").strip() == ""
-    ):
-        return f"Recipe value {error_message}"
+    recipe = data.get("recipe")
+    ingredients = data.get("ingredients")
+    instructions = data.get("instructions")
+    confidence = data.get("confidence")
+    equipment = data.get("equipment")
+    insufficient_ingredients = data.get("insufficient_ingredients")
+
+    if recipe is None or not isinstance(recipe, str) or recipe.strip() == "":
+        return f"{error_header} Recipe value {error_message}"
+
+    if ingredients is None or not isinstance(ingredients, dict):
+        return f"Ingredients value {error_message}"
+
+    if instructions is None or not isinstance(instructions, dict):
+        return f"{error_header} Instructions value {error_message}"
+
+    else:
+        for key, value in instructions.items():
+            if not isinstance(key, str) or not key.isdigit():
+                return f"{error_header} Step '{key}' is not a number."
+
+            if not isinstance(value, dict):
+                return f"{error_header} Value of step '{key}' is not a dictionary."
+
+            required_subkeys = {"step", "time_taken"}
+            missing_keys = required_subkeys - value.keys()
+
+            if missing_keys:
+                return f"{error_header} Step '{key}' is missing required fields: {list(missing_keys)}."
+
+            for subkey in required_subkeys:
+                if not isinstance(value[subkey], str) or not value[subkey].strip():
+                    return f"{error_header} Field '{subkey}' in step '{key}' must be a non-empty string."
 
     if (
-        data.get("ingredients") is None
-        or not isinstance(data.get("ingredients"), str)
-        or data.get("ingredients").strip() == ""
+        confidence is None
+        or not isinstance(confidence, (int, float))
+        or confidence < 0
+        or confidence > 1
     ):
-        return f"Ingredients value {error_message}."
+        return f"{error_header} Confidence value {error_message}"
 
-    if (
-        data.get("instructions") is None
-        or not isinstance(data.get("instructions"), str)
-        or data.get("instructions").strip() == ""
-    ):
-        return f"Instructions value {error_message}"
+    if equipment is None or not isinstance(equipment, list):
+        return f"{error_header} Equipment value {error_message}"
 
-    if data.get("confidence") is None or not isinstance(
-        data.get("confidence"), (int, float)
-    ):
-        return f"Confidence value {error_message}"
+    if not isinstance(insufficient_ingredients, bool):
+        return f"{error_header} Insufficient Ingredients value {error_message}"
 
     return data
 
