@@ -175,7 +175,7 @@ def display_list(records):
     print(f"\n--- Saved Records ({len(records)}) ---")
     for r in records:
         print(
-            f"- {r.get('recipe_name')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
+            f"- {r.get('recipe')} | Status: {r.get('outcome')} | Score: {r.get('score')}"
         )
 
 
@@ -185,7 +185,7 @@ def display_error(msg):
 
 def display_result(record):
     print("\n" + "=" * 40)
-    print(f"RECIPE: {record.get('recipe_name', 'N/A')}")
+    print(f"RECIPE: {record.get('recipe', 'N/A')}")
     print(
         f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
     )

@@ -45,10 +45,10 @@ def add_ingredients():
 
 
 # --- Main Program --- #
-def main():
+def main(logger):
     # --- Variables & Constants --- #
-    record = data_manager.load_ingredients()
-    recipes = data_manager.load_recipes()
+    record = data_manager.load_ingredients(logger=logger)
+    recipes = data_manager.load_recipes(logger=logger)
 
     # --- Program Code --- #
     while True:
@@ -102,7 +102,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(io_manager.display_logs)
 # Function Calls from io_manager.py
 # diet = io_manager.diet()
 # allergy = io_manager.allergy()

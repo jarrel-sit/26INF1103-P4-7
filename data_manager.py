@@ -59,7 +59,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
                 f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one."
             )
 
-        _create_empty_file(filepath, logger=logger)
+        _create_empty_file(filepath, fieldnames, logger=logger)
         return []
 
     records = []
@@ -84,10 +84,6 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
 
                     if row is not None:
                         records.append(row)
-
-                    # if not row.get("ingredient") or not row.get("quantity"):
-                    #     raise ValueError("missing ingredient/quantity")
-                    # records.append(row)
 
                 except (ValueError, KeyError, json.JSONDecodeError) as row_error:
                     if logger:
@@ -268,11 +264,11 @@ def save_recipe(
         return False
 
     formatted_recipe = {
-        "recipe_name": recipe.get("recipe_name", "Unknown Recipe"),
+        "recipe": recipe.get("recipe", "Unknown Recipe"),
         "outcome": recipe.get("outcome", "unknown"),
         "score": recipe.get("score", 0.0),
         "reason": recipe.get("reason", ""),
-        "ingredients_used": json.dumps(recipe.get("ingredients_used", [])),
+        "ingredients": json.dumps(recipe.get("ingredients", [])),
         "instructions": json.dumps(recipe.get("instructions", [])),
     }
 
