@@ -195,9 +195,6 @@ def display_list(records):
             if 1 <= index <= len(records):
                 selected = records[index - 1]
 
-                if isinstance(selected["ingredients"], str):
-                    selected["ingredients"] = json.loads(selected["ingredients"])
-
                 display_result(selected)
 
             else:

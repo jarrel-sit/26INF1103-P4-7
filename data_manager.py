@@ -130,7 +130,7 @@ def load_recipes(
 
     def process_recipes_row(row):
         row["score"] = float(row.get("score", 0.0))
-        row["ingredients_used"] = json.loads(row.get("ingredients_used", "[]"))
+        row["ingredients"] = json.loads(row.get("ingredients", "[]"))
         row["instructions"] = json.loads(row.get("instructions", "[]"))
         return row
 
