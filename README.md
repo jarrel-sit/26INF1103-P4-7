@@ -38,13 +38,13 @@ AI will analyse the user's inputs and determine suitable meals that can be prepa
 
 #### The process would be:
 
-Input (User Ingredients) → AI analyzes ingredients -> AI Generates Possible Meal Recipes → Does Recipe Match User Requirements?
+Input (User Ingredients) -> AI analyzes ingredients -> Input (Allergies and Diet) -> AI Generates Possible Meal Recipes -> Does the recipe match user requirements?
 
  **If**:
 
- Yes → Display Recipe
+ Yes → Display Recipe with successful outcome
 
- No → Generate Another Recommendation
+ No → Display Recipe with rejected outcome and display warning that the recipe is not up to standard, proceed with caution
 
 For example:
 
@@ -54,15 +54,15 @@ For example:
 
 #### Instructions:
 
-Cook the chicken.
+Cook the chicken. (8 mins)
 
-Fry the onions and carrots.
+Fry the onions and carrots. (5 mins)
 
-Add rice and mix.
+Add rice and mix. (2 mins)
 
-Add the chicken and egg.
+Add the chicken and egg. (1 min)
 
-Season and serve.
+Season and serve. (1 min)
 
 
 ## Business Rules
@@ -79,6 +79,3 @@ The system must exclude ingredients that conflict with the user's stated allergi
 
 #### Dietary restrictions
 Recommendations should follow the user's selected dietary requirements.
-
-#### Cooking time
-Recipes should match the user's maximum cooking-time preference where possible.
