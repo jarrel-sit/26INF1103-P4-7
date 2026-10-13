@@ -53,6 +53,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
     Loads all saved records from the CSV spreadsheet specified.
     """
 
+    # Handles missing CSV file and creates it, does not crash
     if not os.path.exists(filepath):
         if logger:
             logger(
@@ -69,6 +70,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
             reader = csv.DictReader(file)
 
             if reader.fieldnames is None or set(reader.fieldnames) != set(fieldnames):
+                # Logs if there is an error reading file
                 if logger:
                     logger(
                         f"[Data Manager] Warning: '{filepath}' has an unexpected or missing "
@@ -77,6 +79,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
 
                 return []
 
+            # Prepares rows to be processed, skipping header row
             for row_number, row in enumerate(reader, start=2):  # row 1 is the header
                 try:
                     if row_processor:
@@ -85,6 +88,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
                     if row is not None:
                         records.append(row)
 
+                # Logs error and skip corrupt rows
                 except (ValueError, KeyError, json.JSONDecodeError) as row_error:
                     if logger:
                         logger(
@@ -94,6 +98,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
 
                     continue
 
+    # Logs errors and create an empty list
     except (csv.Error, OSError, UnicodeDecodeError) as file_error:
         if logger:
             logger(
@@ -112,6 +117,7 @@ def load(filepath, fieldnames, row_processor=None, logger=None):
 def load_ingredients(filepath=DEFAULT_FILEPATH, fieldnames=FIELDNAMES, logger=None):
     """Loads all ingredients from the CSV spreadsheet."""
 
+    # If ingredient rows are not as expected, raise an error
     def process_ingredients_row(row):
         if not row.get("ingredient") or not row.get("quantity"):
             raise ValueError("missing ingredient/quantity")
@@ -161,6 +167,7 @@ def _create_empty_file(filepath, fieldnames=FIELDNAMES, logger=None):
 def save(filepath, fieldnames, data, mode="a", logger=None):
     """Saves all records to specified CSV spreadsheet."""
 
+    # Handles creation of new file if it does not exist
     if not os.path.exists(filepath):
         _create_empty_file(filepath, fieldnames, logger=logger)
 
@@ -207,6 +214,7 @@ def save_ingredients(
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ingredients = load_ingredients(filepath, logger=logger)
 
+    # Gets all existing ingredients from data
     existing_ingredients = {
         str(row.get("ingredient")).strip().lower(): row for row in ingredients
     }
@@ -214,10 +222,12 @@ def save_ingredients(
     for ingredient, quantity in ingredients_list.items():
         ingredient = str(ingredient).strip().lower()
 
+        # Replace/Update the existing ingredients
         if ingredient in existing_ingredients:
             existing_ingredients[ingredient]["quantity"] = quantity
             existing_ingredients[ingredient]["timestamp"] = timestamp
 
+        # Add new row if the ingredient is new
         else:
             ingredients.append(
                 {
@@ -299,12 +309,6 @@ def filter_by_ingredient(records, ingredient_name):
         return False
 
     return query(matches, records)
-
-
-def filter_by_session(records, session_id):
-    """Returns all rows belonging to a specific saved session."""
-    target = str(session_id).strip()
-    return query(lambda row: str(row.get("session_id", "")).strip() == target, records)
 
 
 def filter_by_success(records):
