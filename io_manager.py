@@ -1,30 +1,5 @@
 # Imports
-import re, json
-
-# Input Handling
-# def pax():
-#     while True:
-#         #Asks user for pax input
-#         num_ppl = input("How many pax is this meal for? ")
-
-#         #Checks if user input is non-negative and numeric
-#         if num_ppl.isnumeric() == False:
-#             print('Invalid pax input, please input a non-negative number for pax.')
-#         else:
-#             #Validation for pax check if pax more than 10 (Large number of people)
-#             num_ppl = int(num_ppl)
-#             if num_ppl > 10:
-#                 accept = input("This is a large number of people, results might not be accurate based on your ingredients inputs, are you sure? Please input Yes/No\n").lower()
-#                 pattern = "[yes|no]"
-#                 match = re.match(pattern,accept)
-#                 if match:
-#                     print(f'Noted. Pax of {num_ppl} has be taken note of.')
-#                     return num_ppl
-#                 else:
-#                     print('Invalid please input a non-negative number for pax.')
-#             else:
-#                 return num_ppl
-
+import re
 
 # Function for inputting dietary restrictions
 def diet():
@@ -151,7 +126,7 @@ def ingredient_input(
                 # Prompts user to input again if user gives rubbish format
                 print("Invalid input. Please try again.")
 
-
+#Displays ingredients that have been added 
 def display_ingredients(record):
     if not record:
         print("\nYou have not added any ingredients yet.")
@@ -205,11 +180,11 @@ def display_list(records, message="There are no saved recipes."):
         else:
             print("Invalid input. Please enter a valid number or 'back'.")
 
-
+#Prints Error Message for error handling in main
 def display_error(msg):
     print(f"\n[ERROR]: {msg}")
 
-
+#Displays recipe, if it got accepted/rejected, confidence score and reason for accept/reject
 def display_result(record):
     print("\n" + "=" * 55)
     print(f"RECIPE: {record.get('recipe', 'N/A')}")
@@ -242,13 +217,13 @@ def display_result(record):
     print()
     print("=" * 55)
 
-
+#Checks user input for menu
 def validate_menu(choice, options):
     if choice.isdigit() and int(choice) > 0 and int(choice) <= options:
         return int(choice)
     return None
 
-
+#Menu formatting + validation
 def menu(options=5):
     print("""
 =================================
@@ -272,12 +247,11 @@ def menu(options=5):
 
         print("Invalid option selected. Please try again.")
 
-
 def display_logs(log: str):
     """Outputs verbose log messages."""
     print(f"{log}")
 
-
+#Prints currently added ingredients and asks user which ingredients to use
 def select_ingredients_from_available(available_ingredients):
     """
     Displays all available ingredients and prompts the user to select
@@ -330,7 +304,7 @@ def select_ingredients_from_available(available_ingredients):
 
     return selected, ingredients
 
-
+#Consolidation of inputs 
 def collect_input(record):
     """Combines all input prompts into one standard record dict."""
 
@@ -350,7 +324,7 @@ def collect_input(record):
 
     return False
 
-
+#Prints submenu for user to choose if choose past recipes
 def past_recipes_menu(options=4):
     """Displays the submenu for filtering past recipes."""
     print("""
@@ -369,7 +343,7 @@ def past_recipes_menu(options=4):
             return int(choice)
         print("Invalid option selected. Please try again.")
 
-
+#Past recipe filter to look for ingredient used in recipe(s)
 def prompt_ingredient_query():
     """Prompts the user for an ingredient name to filter past recipes."""
     return input(

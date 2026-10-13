@@ -28,6 +28,7 @@ def test_logic_manager_success_routing():
     assert result["outcome"] == "accept", f"Expected 'accept', got {result['outcome']}"
     assert result["score"] >= 80.0
 
+#Test to see if allergy checks are working, and rejecting wrong outputs
 def test_logic_manager_allergy_failure():
     """Test that an allergy conflict forces a 'reject' outcome."""
     record = {
@@ -45,7 +46,7 @@ def test_logic_manager_allergy_failure():
     assert result["outcome"] == "reject"
     assert "allergy conflict" in result["reason"].lower()
 
-    # ==========================================
+# ==========================================
 # 2. DATA MANAGER PERSISTENCE TESTS
 # ==========================================
 def test_data_manager_save_and_load_success():
@@ -76,7 +77,7 @@ def test_data_manager_save_and_load_success():
     if os.path.exists(test_recipe_file):
         os.remove(test_recipe_file)
 
-
+#Handling of corrupted files 
 def test_data_manager_corrupt_file_handling():
     """Test that data_manager handles corrupted files gracefully without crashing."""
     test_recipe_file = "test_recipe_data.csv"
@@ -89,7 +90,7 @@ def test_data_manager_corrupt_file_handling():
     if os.path.exists(test_recipe_file):
         os.remove(test_recipe_file)
 
-
+#Query and filter testing
 def test_query_and_filters():
     """Test querying and success filtering functions."""
     records = [
