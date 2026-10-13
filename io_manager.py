@@ -279,7 +279,7 @@ def select_ingredients_from_available(available_ingredients):
             break
 
         elif user_choice == "all":
-            return ingredients
+            return ingredients, ingredients
 
         elif user_choice in ingredients.keys():
             selected[user_choice] = ingredients[user_choice]
@@ -292,7 +292,7 @@ def select_ingredients_from_available(available_ingredients):
                 f"'{user_choice}' is not in your available ingredients. Please select from the list above."
             )
 
-    return selected
+    return selected, ingredients
 
 
 def collect_input(record):
@@ -300,7 +300,7 @@ def collect_input(record):
     # pax_val = input("How many pax is this meal for? ").strip()
     # pax_num = int(pax_val) if pax_val.isdigit() else 1
 
-    ingredient_list = select_ingredients_from_available(record)
+    selected_ingredients, ingredient_list = select_ingredients_from_available(record)
     allergies_list = allergy()
     diet_list = diet()
 
@@ -308,10 +308,8 @@ def collect_input(record):
 
     return {
         # "pax": pax_num,
-        "ingredients": ingredient_list,
-        "available_ingredients": [
-            {row.get("ingredient"), row.get("quantity")} for row in record
-        ],
+        "ingredients": selected_ingredients,
+        "available_ingredients": ingredient_list,
         "allergies": allergies_list,
         "dietary_preferences": diet_list,
         # "max_cooking_time_minutes": 60 !! PLEASE CHANGE ACCORDINGLY

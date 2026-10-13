@@ -1,20 +1,57 @@
 # === Imports ===
-from typing import Any
+import re
 
 
-# == Rule Functions ===
+# === Helper Functions ===
+def parse_quantity(qty):
+
+    # In case in the future quantity is returned as a numerical value
+    if not isinstance(qty, str):
+        try:
+            return float(qty), ""
+        except (ValueError, TypeError):
+            return 0.0, ""
+
+    match = re.match(r"^([\d.]+)\s*([a-zA-Z]*)$", qty.strip())
+    if match:
+        try:
+            return float(match.group(1)), match.group(2).lower()
+        except ValueError:
+            return 0.0, ""
+
+    return 0.0, ""
+
+
+# === Rule Functions ===
 def check_ingredient_availability(record: dict) -> dict:
     """
     Rule: Only recommend meals/recipes using ingredients the user has, or flag what needs to be bought.
     """
-    needed = {i.strip().lower() for i in record.get("ingredients", [])}
-    have = {i.strip().lower() for i in record.get("available_ingredients", [])}
-    missing = sorted(needed - have)
+    needed = record.get("ingredients", {})
+    have = record.get("available_ingredients", {})
+
+    missing = []
+
+    for item, needed_qty in needed.items():
+        if item not in have:
+            missing.append(item)
+
+        else:
+            have_qty = have[item]
+
+            needed_num, needed_unit = parse_quantity(needed_qty)
+            have_num, have_unit = parse_quantity(have_qty)
+
+            if needed_num > 0 and have_num > 0:
+                # Check quantifiers, or proceed if there isn't one for either
+                if needed_unit == have_unit or not needed_unit or not have_unit:
+                    if have_num < needed_num:
+                        missing.append(item)
 
     return {
         "rule": "ingredient_availability",
         "passed": len(missing) == 0,
-        "missing_ingredients": missing,
+        "missing_ingredients": sorted(missing),
     }
 
 
@@ -44,7 +81,7 @@ def check_dietary_restrictions(record: dict) -> dict:
     Rule: Recipe must follow the user's selected dietary requirements
     """
     diets = {d.strip().lower() for d in record.get("dietary_preferences", [])}
-    ingredients = {t.strip().lower() for t in record.get("ingredients", [])}
+    ingredients = record.get("ingredients", {})
 
     unmet = set()
     for diet in diets:
@@ -174,7 +211,7 @@ def route(record: dict) -> dict:
         outcome = "flag"
         reasons = []
         if missing_ingredients:
-            reasons.append("missing ingredients")
+            reasons.append("missing or insufficient ingredients")
         if diet_unmet:
             reasons.append("dietary preference not met")
         if over_time:
@@ -190,7 +227,7 @@ def route(record: dict) -> dict:
         "reason": reason,
         "score": numeric_score,
         "rule_results": results,
-        "ingredients_used": record.get("ingredients_used"),
+        "ingredients": record.get("ingredients"),
         "instructions": record.get("instructions"),
     }
 

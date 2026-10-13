@@ -34,11 +34,11 @@ DEFAULT_RECIPES_FILEPATH = "recipe_data.csv"
 # Column headers for the CSV spreadsheet.
 FIELDNAMES = ["session_id", "timestamp", "ingredient", "quantity"]
 RECIPE_FIELDNAMES = [
-    "recipe_name",
+    "recipe",
     "outcome",
     "score",
     "reason",
-    "ingredients_used",
+    "ingredients",
     "instructions",
 ]
 

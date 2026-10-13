@@ -15,6 +15,7 @@ REQUIRED_KEYS = {
     "ingredients": "dict",
     "instructions": "dict",
     "confidence": "int or float",
+    "dietary_preferences": "list",
     "hazardous_ingredients": "dict",
     "equipment": "list",
     "insufficient_ingredients": "bool",
@@ -152,6 +153,7 @@ def validate_response(data: dict):
     confidence = data.get("confidence")
     equipment = data.get("equipment")
     insufficient_ingredients = data.get("insufficient_ingredients")
+    diet = data.get("dietary_preferences")
 
     if recipe is None or not isinstance(recipe, str) or recipe.strip() == "":
         return f"{error_header} Recipe value {error_message}"
@@ -193,6 +195,9 @@ def validate_response(data: dict):
 
     if not isinstance(insufficient_ingredients, bool):
         return f"{error_header} Insufficient Ingredients value {error_message}"
+
+    if not isinstance(diet, list):
+        return f"{error_header} Dietary Preferences value {error_message}"
 
     return data
 
