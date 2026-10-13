@@ -111,6 +111,7 @@ def load_records(filepath=DEFAULT_FILEPATH, logger=None):
 
     return records
 
+
 def load(filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
     """
     Loads all evaluated recipe records from the CSV file.
@@ -119,12 +120,12 @@ def load(filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
     if not os.path.exists(filepath):
         _create_empty_file(filepath, RECIPE_FIELDNAMES, logger)
 
-
         if logger:
-            logger(f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one.")
-        
-        return []
+            logger(
+                f"[Data Manager] No existing data file found at '{filepath}'. Creating a new one."
+            )
 
+        return []
 
     records = []
     try:
@@ -142,7 +143,6 @@ def load(filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
 
                 return []
 
-
             for row_number, row in enumerate(reader, start=2):
                 try:
                     row["score"] = float(row.get("score", 0.0))
@@ -159,7 +159,6 @@ def load(filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
                         )
                     continue
 
-
     except (csv.Error, OSError, UnicodeDecodeError) as file_error:
         if logger:
             logger(
@@ -167,7 +166,6 @@ def load(filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
                 f"Treating it as empty/corrupt and starting fresh."
             )
         return []
-
 
     return records
 
@@ -209,23 +207,37 @@ def save_ingredients(ingredients_list, filepath=DEFAULT_FILEPATH, logger=None):
         return False
 
     if not os.path.exists(filepath):
-        _create_empty_file(filepath, logger=logger)
+        _create_empty_file(filepath, logger)
 
     session_id = _next_session_id(filepath)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    records = load_records(filepath, logger)
+    existing_records = {
+        str(row.get("ingredient")).strip().lower(): row for row in records
+    }
+
+    for ingredient, quantity in ingredients_list.items():
+        ingredient = str(ingredient).strip().lower()
+
+        if ingredient in existing_records:
+            existing_records[ingredient]["quantity"] = quantity
+            existing_records[ingredient]["timestamp"] = timestamp
+
+        else:
+            records.append(
+                {
+                    "session_id": session_id,
+                    "timestamp": timestamp,
+                    "ingredient": ingredient,
+                    "quantity": quantity,
+                }
+            )
 
     try:
-        with open(filepath, mode="a", newline="", encoding="utf-8") as file:
+        with open(filepath, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
-            for name, quantity in ingredients_list.items():
-                writer.writerow(
-                    {
-                        "session_id": session_id,
-                        "timestamp": timestamp,
-                        "ingredient": name,
-                        "quantity": quantity,
-                    }
-                )
+            writer.writeheader()
+            writer.writerows(records)
 
     except OSError as error:
         if logger:
@@ -306,10 +318,12 @@ def filter_by_ingredient(records, ingredient_name):
         records,
     )
 
+
 def filter_by_session(records, session_id):
     """Returns all rows belonging to a specific saved session."""
     target = str(session_id).strip()
     return query(lambda row: str(row.get("session_id", "")).strip() == target, records)
+
 
 def filter_by_success(records):
     """Returns all matching recipe rows with successful evaluation via business rules."""
@@ -322,7 +336,6 @@ def query(filter_fn, records):
     Example: query(lambda r: r["outcome"] == "accept")
     """
     return [record for record in records if filter_fn(record)]
-
 
 
 # ---------------------------------------------------------------------------
