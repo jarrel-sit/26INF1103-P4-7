@@ -130,14 +130,14 @@ def parse_response(raw: str):
 
     # Remove `json` header to parse
     if raw.startswith("json"):
-        cleaned = raw[4:]
+        raw = raw[4:]
 
     # Parse the response as JSON and handle any parsing errors
     try:
-        return json.loads(cleaned)
+        return json.loads(raw)
 
     except json.JSONDecodeError as e:
-        return f"JSON parsing error: {e} \nResponse content: {cleaned}"
+        return f"JSON parsing error: {e} \nResponse content: {raw}"
 
 
 def validate_response(data: dict):
