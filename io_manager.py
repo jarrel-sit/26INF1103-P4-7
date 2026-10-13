@@ -184,13 +184,31 @@ def display_error(msg):
 
 
 def display_result(record):
-    print("\n" + "=" * 40)
+    print("\n" + "=" * 55)
     print(f"RECIPE: {record.get('recipe', 'N/A')}")
     print(
         f"OUTCOME: {record.get('outcome', 'N/A').upper()} (Score: {record.get('score', 0)})"
     )
     print(f"REASON: {record.get('reason', '')}")
-    print("=" * 40)
+    print("=" * 55)
+
+    print("\n--- Ingredients Used ---")
+    ingredients = record.get("ingredients", {})
+
+    for ingredient, quantity in ingredients.items():
+        print(f" - {str(ingredient).capitalize()}: {quantity}")
+
+    print("\n--- Instructions ---")
+
+    instructions = record.get("instructions")
+
+    # Sort keys to ensure that the steps are in numerical order
+    for step_num, step_data in sorted(instructions.items(), key=lambda x: str(x[0])):
+        step = step_data.get("step", "")
+        time_taken = step_data.get("time_taken")
+        print(f" {step_num}. {step} [Time: {time_taken}]")
+
+    print("\n=" * 55)
 
 
 def checkfield(ingredients, allergies, dietreq):
