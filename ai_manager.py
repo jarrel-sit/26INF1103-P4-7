@@ -62,9 +62,9 @@ def build_prompt(record: dict):
     {', '.join([f'{key}: {value}' for key, value in REQUIRED_KEYS.items()])}
 
     Examples of instructions should be formatted as: 
-    instructions: {{
-        1: {{ step: 'Instruction 1', time_taken: '5min' }}, 
-        2: {{ step: 'Instruction 2', time_taken: '2min' }},
+    "instructions": {{
+        "1": {{ "step": 'Instruction 1', "time_taken": '5min' }}, 
+        "2": {{ "step": 'Instruction 2', "time_taken": '2min' }},
     }}
 
     Examples of dietary preferences/allergies should be formatted as:
