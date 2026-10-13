@@ -218,12 +218,10 @@ def display_result(record):
     )
     print(f"REASON: {record.get('reason', '')}")
 
-    if record.get('outcome') == "reject":
+    if record.get("outcome") == "reject":
         print("!!! USE AT YOUR OWN RISK !!!")
 
     print("=" * 55)
-
-    
 
     print("\n--- Ingredients Used ---")
     ingredients = record.get("ingredients", {})
@@ -337,16 +335,20 @@ def collect_input(record):
     """Combines all input prompts into one standard record dict."""
 
     selected_ingredients, ingredient_list = select_ingredients_from_available(record)
-    allergies_list = allergy()
-    diet_list = diet()
 
-    return {
-        # "pax": pax_num,
-        "ingredients": selected_ingredients,
-        "available_ingredients": ingredient_list,
-        "allergies": allergies_list,
-        "dietary_preferences": diet_list,
-    }
+    if selected_ingredients:
+        allergies_list = allergy()
+        diet_list = diet()
+
+        return {
+            # "pax": pax_num,
+            "ingredients": selected_ingredients,
+            "available_ingredients": ingredient_list,
+            "allergies": allergies_list,
+            "dietary_preferences": diet_list,
+        }
+
+    return False
 
 
 def past_recipes_menu(options=4):
@@ -370,4 +372,6 @@ def past_recipes_menu(options=4):
 
 def prompt_ingredient_query():
     """Prompts the user for an ingredient name to filter past recipes."""
-    return input("Enter the ingredient name to search for (leave it empty to go back): ").strip()
+    return input(
+        "Enter the ingredient name to search for (leave it empty to go back): "
+    ).strip()

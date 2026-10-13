@@ -132,8 +132,6 @@ def parse_response(raw: str):
     if raw.startswith("json"):
         cleaned = raw[4:]
 
-    print(cleaned)
-
     # Parse the response as JSON and handle any parsing errors
     try:
         return json.loads(cleaned)

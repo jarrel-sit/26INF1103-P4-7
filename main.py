@@ -10,12 +10,15 @@ def recipe_pipeline(record, logger):
         )
         return
 
-    user_input = io_manager.collect_input(record)  # add respective module
+    user_input = io_manager.collect_input(record)
 
-    success, response = ai_manager.process(user_input)  # add respective module
+    if not user_input:
+        return
+
+    success, response = ai_manager.process(user_input)
 
     if not success:
-        io_manager.display_error(response)  # add respective module
+        io_manager.display_error(response)
         return data_manager.load_recipes(logger=logger)
 
     combined_output = {**user_input, **response}
