@@ -288,10 +288,19 @@ def save_recipe(
 def filter_by_ingredient(records, ingredient_name):
     """Returns all rows matching a given ingredient name (case-insensitive)."""
     ingredient_name = ingredient_name.strip().lower()
-    return query(
-        lambda row: row.get("ingredient", "").strip().lower() == ingredient_name,
-        records,
-    )
+
+    def matches(record):
+        ingredients = json.loads(record.get("ingredients"))
+
+        print(ingredients)
+
+        for name in ingredients:
+            if ingredient_name in str(name).strip().lower():
+                return True
+
+        return False
+
+    return query(matches, records)
 
 
 def filter_by_session(records, session_id):

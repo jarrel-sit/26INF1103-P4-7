@@ -3,7 +3,7 @@ import io_manager, data_manager, ai_manager, logic_manager
 
 
 # --- Functions --- #
-def recipe_pipeline(record):
+def recipe_pipeline(record, logger):
     if not record:
         print("Please key in some ingredients. Ingredients information is missing.")
         return
@@ -20,9 +20,11 @@ def recipe_pipeline(record):
     evaluated_record = logic_manager.route(combined_output)
 
     # Store for memory and access previous accepted recipes
-    data_manager.save_recipe(evaluated_record)
+    data_manager.save_recipe(evaluated_record, logger=logger)
 
     io_manager.display_result(evaluated_record)
+
+    return data_manager.load_recipes(logger=logger)
 
 
 def add_ingredients():
@@ -67,7 +69,7 @@ def main(logger):
 
         # AI Recipe recommendation
         elif choice == 3:
-            recipe_pipeline(record)
+            recipes = recipe_pipeline(record, logger)
 
         # View past (successful?) recommendations
         elif choice == 4:

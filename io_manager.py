@@ -208,7 +208,8 @@ def display_result(record):
         time_taken = step_data.get("time_taken")
         print(f" {step_num}. {step} [Time: {time_taken}]")
 
-    print("\n=" * 55)
+    print()
+    print("=" * 55)
 
 
 def checkfield(ingredients, allergies, dietreq):
