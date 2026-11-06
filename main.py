@@ -79,7 +79,7 @@ def main(logger):
 
         # Adding of new ingredients
         if choice == 1:
-            ingredients = add_ingredients(ingredients, ingredient_repo)
+            ingredients = add_ingredients(ingredients, ingredient_repo) #was add_ingredients(ingredients)
 
         # List all ingredients
         elif choice == 2:

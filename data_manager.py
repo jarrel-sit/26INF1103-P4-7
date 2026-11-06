@@ -23,6 +23,7 @@ e.g.:
 extra columns later if needed.)
 """
 
+from abc import ABC, abstractmethod
 import csv, json
 import os
 from datetime import datetime
@@ -323,12 +324,26 @@ def query(filter_fn, records):
     """
     return [record for record in records if filter_fn(record)]
 
+# ---------------------------------------------------------------------------
+# 3. Interface
+# ---------------------------------------------------------------------------
+
+class IngredientRepository(ABC):
+    """Contract for storing and loading the user's ingredients."""
+
+    @abstractmethod
+    def save_all(self, ingredients):
+        pass
+
+    @abstractmethod
+    def find_all(self):
+        pass
 
 # ---------------------------------------------------------------------------
 # 3. Class
 # ---------------------------------------------------------------------------
 
-class CsvIngredientRepository:
+class CsvIngredientRepository(IngredientRepository):
     def __init__(self, filepath=DEFAULT_FILEPATH, logger=None):
         self.__filepath = filepath
         self.__logger = logger
@@ -362,3 +377,5 @@ class CsvIngredientRepository:
                 })
 
         return save(self.__filepath, FIELDNAMES, rows, mode="w", logger=self.__logger)
+
+
