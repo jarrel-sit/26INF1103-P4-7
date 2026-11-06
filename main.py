@@ -43,33 +43,22 @@ def recipe_pipeline(record, logger=None):
     return data_manager.load_recipes(logger=logger)
 
 
-def add_ingredients(record, logger=None):
-    """Pipeline for the adding ingredients to CSV. Takes in `record` and `logger` as inputs.
-    - `record`: the loaded data from CSV spreadsheet
-    - `logger`: enables logging if the logging function is passed through"""
-
-    # Allows user to add ingredients
+def add_ingredients(record, ingredient_repo):
     ingredients = io_manager.ingredient_input(
         success_message="\nUpdated the ingredients list!",
         failure_message="No new ingredients were added. ",
     )
 
-    # If new ingredients are added
     if ingredients:
-        success = data_manager.save_ingredients(ingredients, logger=logger)
+        success = ingredient_repo.save_all(ingredients)
 
-        # Checks if the saving to file attempt was successful and logs messages accordingly
         if success:
-            io_manager.display_logs(
-                "Successfully saved ingredients to persistent storage."
-            )
+            io_manager.display_logs("Successfully saved ingredients to persistent storage.")
         else:
             io_manager.display_error("Failed to save ingredients to disk.")
 
-        # Reloads updated data from CSV
-        return data_manager.load_ingredients(logger=logger)
+        return ingredient_repo.find_all()
 
-    # Returns itself if nothing has changed
     return record
 
 
@@ -79,7 +68,8 @@ def main(logger):
     - `logger`: enables logging if the logging function is passed through"""
 
     # --- Variables & Constants --- #
-    ingredients = data_manager.load_ingredients(logger=logger)
+    ingredient_repo = data_manager.CsvIngredientRepository(logger=logger)
+    ingredients = ingredient_repo.find_all()          # was data_manager.load_ingredients(logger=logger)
     recipes = data_manager.load_recipes(logger=logger)
 
     # --- Program Code --- #
@@ -89,7 +79,7 @@ def main(logger):
 
         # Adding of new ingredients
         if choice == 1:
-            ingredients = add_ingredients(ingredients)
+            ingredients = add_ingredients(ingredients, ingredient_repo)
 
         # List all ingredients
         elif choice == 2:

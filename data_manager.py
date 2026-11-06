@@ -191,52 +191,52 @@ def save(filepath, fieldnames, data, mode="a", logger=None):
     return True
 
 
-def save_ingredients(
-    ingredients_list, filepath=DEFAULT_FILEPATH, fieldnames=FIELDNAMES, logger=None
-):
-    """
-    Saves a processed set of ingredients (as produced by
-    io_manager.ingredient_input()) into the CSV spreadsheet, one row per
-    ingredient, tagged with a shared session_id and timestamp.
+# def save_ingredients(
+#     ingredients_list, filepath=DEFAULT_FILEPATH, fieldnames=FIELDNAMES, logger=None
+# ):
+#     """
+#     Saves a processed set of ingredients (as produced by
+#     io_manager.ingredient_input()) into the CSV spreadsheet, one row per
+#     ingredient, tagged with a shared session_id and timestamp.
 
-    ingredients_list: dict like {"sugar": "100g", "flour": "200g"}
-    filepath: path to the CSV spreadsheet
+#     ingredients_list: dict like {"sugar": "100g", "flour": "200g"}
+#     filepath: path to the CSV spreadsheet
 
-    Returns True if the save succeeded, False otherwise (never raises).
-    """
-    if not ingredients_list:
-        if logger:
-            logger("[Data Manager] Nothing to save - ingredients list is empty.")
+#     Returns True if the save succeeded, False otherwise (never raises).
+#     """
+#     if not ingredients_list:
+#         if logger:
+#             logger("[Data Manager] Nothing to save - ingredients list is empty.")
 
-        return False
+#         return False
 
-    session_id = _next_session_id(filepath)
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ingredients = load_ingredients(filepath, logger=logger)
+#     session_id = _next_session_id(filepath)
+#     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     ingredients = load_ingredients(filepath, logger=logger)
 
-    # Gets all existing ingredients from data
-    existing_ingredients = {
-        str(row.get("ingredient")).strip().lower(): row for row in ingredients
-    }
+#     # Gets all existing ingredients from data
+#     existing_ingredients = {
+#         str(row.get("ingredient")).strip().lower(): row for row in ingredients
+#     }
 
-    for ingredient, quantity in ingredients_list.items():
-        ingredient = str(ingredient).strip().lower()
+#     for ingredient, quantity in ingredients_list.items():
+#         ingredient = str(ingredient).strip().lower()
 
-        # Replace/Update the existing ingredients
-        if ingredient in existing_ingredients:
-            existing_ingredients[ingredient]["quantity"] = quantity
-            existing_ingredients[ingredient]["timestamp"] = timestamp
+#         # Replace/Update the existing ingredients
+#         if ingredient in existing_ingredients:
+#             existing_ingredients[ingredient]["quantity"] = quantity
+#             existing_ingredients[ingredient]["timestamp"] = timestamp
 
-        # Add new row if the ingredient is new
-        else:
-            ingredients.append(
-                {
-                    "session_id": session_id,
-                    "timestamp": timestamp,
-                    "ingredient": ingredient,
-                    "quantity": quantity,
-                }
-            )
+#         # Add new row if the ingredient is new
+#         else:
+#             ingredients.append(
+#                 {
+#                     "session_id": session_id,
+#                     "timestamp": timestamp,
+#                     "ingredient": ingredient,
+#                     "quantity": quantity,
+#                 }
+#             )
 
     success = save(filepath, fieldnames, ingredients, mode="w", logger=logger)
 
@@ -322,3 +322,43 @@ def query(filter_fn, records):
     Example: query(lambda r: r["outcome"] == "accept")
     """
     return [record for record in records if filter_fn(record)]
+
+
+# ---------------------------------------------------------------------------
+# 3. Class
+# ---------------------------------------------------------------------------
+
+class CsvIngredientRepository:
+    def __init__(self, filepath=DEFAULT_FILEPATH, logger=None):
+        self.__filepath = filepath
+        self.__logger = logger
+
+    def find_all(self):
+        """Returns {ingredient: quantity} for everything saved."""
+        rows = load_ingredients(self.__filepath, logger=self.__logger)
+        return {row["ingredient"]: row["quantity"] for row in rows}
+
+    def save_all(self, ingredients):
+        """Adds new ingredients and updates quantities of existing ones."""
+        if not ingredients:
+            return False
+
+        rows = load_ingredients(self.__filepath, logger=self.__logger)
+        session_id = _next_session_id(self.__filepath)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        existing = {str(r["ingredient"]).strip().lower(): r for r in rows}
+
+        for name, quantity in ingredients.items():
+            name = str(name).strip().lower()
+            if name in existing:
+                existing[name]["quantity"] = quantity
+                existing[name]["timestamp"] = timestamp
+            else:
+                rows.append({
+                    "session_id": session_id,
+                    "timestamp": timestamp,
+                    "ingredient": name,
+                    "quantity": quantity,
+                })
+
+        return save(self.__filepath, FIELDNAMES, rows, mode="w", logger=self.__logger)
