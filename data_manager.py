@@ -325,7 +325,7 @@ def query(filter_fn, records):
     return [record for record in records if filter_fn(record)]
 
 # ---------------------------------------------------------------------------
-# 3. Interface
+#  Interface
 # ---------------------------------------------------------------------------
 
 class IngredientRepository(ABC):
@@ -339,8 +339,27 @@ class IngredientRepository(ABC):
     def find_all(self):
         pass
 
+class RecipeRepository(ABC):
+    """Contract for storing and querying evaluated recipes."""
+
+    @abstractmethod
+    def save(self, recipe, result):
+        pass
+
+    @abstractmethod
+    def find_all(self):
+        pass
+
+    @abstractmethod
+    def find_successful(self):
+        pass
+
+    @abstractmethod
+    def find_by_ingredient(self, name):
+        pass
+
 # ---------------------------------------------------------------------------
-# 3. Class
+#  Class
 # ---------------------------------------------------------------------------
 
 class CsvIngredientRepository(IngredientRepository):
