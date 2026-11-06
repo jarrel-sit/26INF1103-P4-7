@@ -127,20 +127,30 @@ def ingredient_input(
                 print("Invalid input. Please try again.")
 
 #Displays ingredients that have been added 
+# def display_ingredients(record):
+#     if not record:
+#         print("\nYou have not added any ingredients yet.")
+#         return
+
+#     if isinstance(record, list):
+#         ingredients = record
+
+#     elif isinstance(record, dict):
+#         ingredients = record.get("ingredients", [])
+
+#     print("\n--- Current Available Ingredients ---")
+#     for item in ingredients:
+#         print(f" - {item['ingredient']}: {item['quantity']}")
+
+# change
 def display_ingredients(record):
     if not record:
         print("\nYou have not added any ingredients yet.")
         return
 
-    if isinstance(record, list):
-        ingredients = record
-
-    elif isinstance(record, dict):
-        ingredients = record.get("ingredients", [])
-
     print("\n--- Current Available Ingredients ---")
-    for item in ingredients:
-        print(f" - {item['ingredient']}: {item['quantity']}")
+    for name, quantity in record.items():
+        print(f" - {name}: {quantity}")
 
 
 def display_list(records, message="There are no saved recipes."):
@@ -261,11 +271,14 @@ def select_ingredients_from_available(available_ingredients):
     if not available_ingredients:
         return {}
 
-    ingredients = {}
+    # ingredients = {}
 
-    for row in available_ingredients:
-        name = row.get("ingredient").strip()
-        ingredients[name] = row.get("quantity")
+    # for row in available_ingredients:
+    #     name = row.get("ingredient").strip()
+    #     ingredients[name] = row.get("quantity")
+
+    # changes
+    ingredients = {name.strip(): qty for name, qty in available_ingredients.items()}
 
     if not ingredients:
         return {}
