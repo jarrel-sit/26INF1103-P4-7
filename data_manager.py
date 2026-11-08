@@ -27,6 +27,7 @@ from abc import ABC, abstractmethod
 import csv, json
 import os
 from datetime import datetime
+import re
 
 # Default location of the spreadsheet (CSV) that acts as persistent storage.
 DEFAULT_FILEPATH = "ingredients_data.csv"
@@ -47,6 +48,17 @@ RECIPE_FIELDNAMES = [
 # ---------------------------------------------------------------------------
 # 2. Load all records on startup (+ 4. handle missing/corrupt files)
 # ---------------------------------------------------------------------------
+
+def add_quantities(old, new):
+    """'100g' + '100g' -> '200g'. If the units differ, the new quantity replaces the old."""
+    old_match = re.match(r"^(\d+(?:\.\d+)?)([a-zA-Z]*)$", str(old).strip())
+    new_match = re.match(r"^(\d+(?:\.\d+)?)([a-zA-Z]*)$", str(new).strip())
+
+    if old_match and new_match and old_match.group(2) == new_match.group(2):
+        total = float(old_match.group(1)) + float(new_match.group(1))
+        return f"{total:g}{new_match.group(2)}"
+
+    return new
 
 
 def load(filepath, fieldnames, row_processor=None, logger=None):
@@ -385,7 +397,7 @@ class CsvIngredientRepository(IngredientRepository):
         for name, quantity in ingredients.items():
             name = str(name).strip().lower()
             if name in existing:
-                existing[name]["quantity"] = quantity
+                existing[name]["quantity"] = add_quantities(existing[name]["quantity"], quantity)
                 existing[name]["timestamp"] = timestamp
             else:
                 rows.append({

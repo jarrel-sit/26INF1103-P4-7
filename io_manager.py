@@ -1,5 +1,6 @@
 # Imports
 import re
+import data_manager
 
 # Function for inputting dietary restrictions
 def diet():
@@ -115,6 +116,8 @@ def ingredient_input(
                     or match.group(3) == "g"
                 ):
                     quantity = match.group(2) + match.group(3)
+                    if name in ingredients_list:
+                        quantity = data_manager.add_quantities(ingredients_list[name], quantity)
                     ingredients_list[name] = quantity
 
                     # Message to indicate valid input from user
