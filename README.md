@@ -89,7 +89,7 @@ This repository uses GitHub Actions to include CI pipeline. Its configuration is
 
 ### Workflow Triggers
 
-The CI pipeline is configured to execute automatically whenever code is pushed to the `main` branch or when a pull request is opened against the `main` branch.
+The CI pipeline is configured to execute automatically whenever code is pushed to **any branch** or when a pull request is opened against **any branch**.
 
 ### Automated Testing & API Independence
 
