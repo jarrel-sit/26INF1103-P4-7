@@ -1,3 +1,5 @@
+[![Python application CI script](https://github.com/jarrel-sit/26INF1103-P4-7/actions/workflows/python-app.yml/badge.svg)](https://github.com/jarrel-sit/26INF1103-P4-7/actions/workflows/python-app.yml)
+
 # AI Recipe Planner 
 
 ## Problem statement
