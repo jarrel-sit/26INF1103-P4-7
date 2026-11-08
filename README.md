@@ -81,3 +81,22 @@ The system must exclude ingredients that conflict with the user's stated allergi
 
 #### Dietary restrictions
 Recommendations should follow the user's selected dietary requirements.
+
+---
+## Continuous Integration (CI) Workflow
+
+This repository uses GitHub Actions to include CI pipeline. Its configuration is located in our repository at `.github/workflows/python-app.yml`.
+
+### Workflow Triggers
+
+The CI pipeline is configured to execute automatically whenever code is pushed to the `main` branch or when a pull request is opened against the `main` branch.
+
+### Automated Testing & API Independence
+
+Our CI script automatically sets up a Python 3.11 environment, installs project dependencies from `requirements.txt`, and executes our automated test suite using `pytest`.
+
+To ensure the tests strictly verify core logic independently of a live API connection, the workflow injects a dummy environment variable (`GENAI_API_KEY: "test_api_key"`). This allows the test suite to execute successfully using hardcoded sample responses without crashing due to missing real credentials.
+
+### Code Quality
+
+Before running the tests, the workflow includes a linting step using `flake8` to catch Python syntax errors, undefined names, and complexity issues, ensuring good programming practices are maintained throughout the codebase.
