@@ -3,24 +3,63 @@ import io_manager, data_manager, ai_manager, logic_manager
 
 
 # --- Functions --- #
-def recipe_pipeline(record, logger=None):
-    """Pipeline for the recipe generator. Takes in `record` and `logger` as inputs.
-    - `record`: the loaded data from CSV spreadsheet
-    - `logger`: enables logging if the logging function is passed through"""
+# def recipe_pipeline(record, logger=None):
+#     """Pipeline for the recipe generator. Takes in `record` and `logger` as inputs.
+#     - `record`: the loaded data from CSV spreadsheet
+#     - `logger`: enables logging if the logging function is passed through"""
+
+#     # If record is empty
+#     if not record:
+#         io_manager.display_error(
+#             "Please key in some ingredients. Ingredients information is missing."
+#         )
+#         return record
+
+#     # Collect user input
+#     user_input = io_manager.collect_input(record)
+
+#     # If user input is empty
+#     if not user_input:
+#         return record
+
+#     # Gets AI response on success
+#     success, response = ai_manager.process(user_input)
+
+#     # If AI response failed checks or is malformed
+#     if not success:
+#         io_manager.display_error(response)
+#         return record
+
+#     # Check response and user input under business rules
+#     combined_output = {**user_input, **response}
+#     evaluated_record = logic_manager.route(combined_output)
+
+#     # Store for memory and access previous accepted recipes
+#     data_manager.save_recipe(evaluated_record, logger=logger)
+
+#     io_manager.display_result(evaluated_record)
+
+#     # Reload updated data from CSV
+#     return data_manager.load_recipes(logger=logger)
+
+def recipe_pipeline(record, recipe_repo):
+    """Pipeline for the recipe generator.
+    - `record`: the user's saved ingredients
+    - `recipe_repo`: the recipe repository used to save and reload recipes"""
 
     # If record is empty
     if not record:
         io_manager.display_error(
             "Please key in some ingredients. Ingredients information is missing."
         )
-        return record
+        return recipe_repo.find_all()
 
     # Collect user input
     user_input = io_manager.collect_input(record)
 
     # If user input is empty
     if not user_input:
-        return record
+        return recipe_repo.find_all()
 
     # Gets AI response on success
     success, response = ai_manager.process(user_input)
@@ -28,19 +67,19 @@ def recipe_pipeline(record, logger=None):
     # If AI response failed checks or is malformed
     if not success:
         io_manager.display_error(response)
-        return record
+        return recipe_repo.find_all()
 
     # Check response and user input under business rules
     combined_output = {**user_input, **response}
     evaluated_record = logic_manager.route(combined_output)
 
     # Store for memory and access previous accepted recipes
-    data_manager.save_recipe(evaluated_record, logger=logger)
+    recipe_repo.save(evaluated_record)
 
     io_manager.display_result(evaluated_record)
 
     # Reload updated data from CSV
-    return data_manager.load_recipes(logger=logger)
+    return recipe_repo.find_all()
 
 
 def add_ingredients(record, ingredient_repo):
@@ -70,7 +109,8 @@ def main(logger):
     # --- Variables & Constants --- #
     ingredient_repo = data_manager.CsvIngredientRepository(logger=logger)
     ingredients = ingredient_repo.find_all()          # was data_manager.load_ingredients(logger=logger)
-    recipes = data_manager.load_recipes(logger=logger)
+    recipe_repo = data_manager.CsvRecipeRepository(logger=logger)
+    recipes = recipe_repo.find_all()
 
     # --- Program Code --- #
     while True:
@@ -87,7 +127,7 @@ def main(logger):
 
         # AI Recipe recommendation
         elif choice == 3:
-            recipes = recipe_pipeline(ingredients, logger=logger)
+            recipes = recipe_pipeline(ingredients, recipe_repo)
 
         # View past recipe recommendations
         elif choice == 4:
@@ -101,7 +141,7 @@ def main(logger):
 
                 # List successful recipes
                 elif sub_choice == 2:
-                    successful_recipes = data_manager.filter_by_success(recipes)
+                    successful_recipes = recipe_repo.find_successful()
                     io_manager.display_list(
                         successful_recipes,
                         message="There are no saved recipes that contain the query. ",
@@ -111,9 +151,7 @@ def main(logger):
                 elif sub_choice == 3:
                     ingredient_query = io_manager.prompt_ingredient_query()
                     if ingredient_query:
-                        filtered_recipes = data_manager.filter_by_ingredient(
-                            recipes, ingredient_query
-                        )
+                        filtered_recipes = recipe_repo.find_by_ingredient(ingredient_query)
 
                         io_manager.display_list(
                             filtered_recipes,
