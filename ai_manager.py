@@ -19,8 +19,32 @@ class ValidationResult:
 class Instruction:
     step: str
     time_taken: str
+  
+@dataclass
+class RecipeRequest:
+    ingredients: Dict[str, str]
+    available_ingredients: Dict[str, str]
+    allergies: List[str]
+    dietary_preferences: List[str]
+    pax: int
 
 
+@dataclass
+class RecipeResponse:
+    name: str
+    ingredients: Dict[str, str]
+    instructions: Dict[str, Instruction]
+    confidence: float
+    equipment: List[str]
+    hazardous_ingredients: Dict[str, str]
+    insufficient_ingredients: bool
+
+
+@dataclass
+class AIResult:
+    success: bool
+    recipe: Optional[RecipeResponse] = None
+    error: Optional[str] = None 
 
 
 # --- Constants --- #
