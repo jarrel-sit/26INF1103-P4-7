@@ -46,6 +46,11 @@ class AIResult:
     recipe: Optional[RecipeResponse] = None
     error: Optional[str] = None 
 
+#==========================================
+class AIClient(ABC):
+    @abstractmethod
+    def generate(self, prompt: str) -> str:
+        pass
 
 # --- Constants --- #
 CLIENT = genai.Client(api_key=API_KEY)
