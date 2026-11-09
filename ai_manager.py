@@ -51,7 +51,14 @@ class AIClient(ABC):
     @abstractmethod
     def generate(self, prompt: str) -> str:
         pass
+    
+class GeminiClient(AIClient):
+    def __init__(self, client: any):
+        self._client = client
 
+    def generate(self, prompt: str) -> str:
+        # Implementation for calling the underlying client
+        return self._client.generate(prompt)
 # --- Constants --- #
 CLIENT = genai.Client(api_key=API_KEY)
 REQUIRED_KEYS = {
