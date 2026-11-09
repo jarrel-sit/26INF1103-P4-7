@@ -2,10 +2,25 @@
 from google import genai
 from dotenv import load_dotenv
 import os, json, time
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 # --- Load Environment Variables --- #
 load_dotenv(dotenv_path="./.env")
 API_KEY = os.getenv("GENAI_API_KEY")
+
+@dataclass
+class ValidationResult:
+    is_valid: bool
+    errors: List[str] = field(default_factory=list)
+
+@dataclass
+class Instruction:
+    step: str
+    time_taken: str
+
+
 
 
 # --- Constants --- #
