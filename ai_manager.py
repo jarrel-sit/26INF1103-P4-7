@@ -109,6 +109,11 @@ class RecipeValidator:
             is_valid=len(errors) == 0,
             errors=errors
         )
+    
+class BaseAIManager(ABC):
+    @abstractmethod
+    def process(self, request: RecipeRequest) -> AIResult:
+        pass
 
 
 
