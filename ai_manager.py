@@ -24,12 +24,14 @@ class AIClient(ABC):
 
 
 class GeminiClient(AIClient):
-    def __init__(self, client: any):
+    def __init__(self, client: genai.Client):
         self._client = client
 
     def generate(self, prompt: str) -> str:
         # Implementation for calling the underlying client
-        return self._client.generate(prompt)
+        return self.call_api(prompt)
+
+
 
 
 class RecipeValidator:
@@ -109,7 +111,7 @@ class GeminiAIManager(BaseAIManager):
 
     def process(self, request: RecipeRequest) -> AIResult:
         prompt = self._build_prompt(request)
-        raw_response = self._call_api(prompt)
+        raw_response = self.call_api(prompt)
         recipe = self._parse_response(raw_response)
 
         validation = self._validator.validate(recipe)
@@ -169,14 +171,62 @@ class GeminiAIManager(BaseAIManager):
                 "2": {{ "step": 'Instruction 2', "time_taken": '2min' }},
             }}
             """
-
-    def _call_api(self, prompt: str) -> str:
-
-        return self._client.generate(prompt)
-
+        return prompt
+    
+    def call_api(self, prompt: str = "", max_retries: int = 3, delay: int = 2) -> str:
+            """
+            Function to call the API and handle the response.
+            """
+            # Retries the API calls, only fail if all tries unsuccessful
+            for attempt in range(1, max_retries + 1):
+                try:
+                    if hasattr(self._client, "generate"):
+                        return self._client.generate(prompt)
+    
+                    if (
+                        hasattr(self._client, "models")
+                        and hasattr(self._client.models, "generate_content")
+                    ):
+                        response = self._client.models.generate_content(
+                            model="gemini-2.0-flash",
+                            contents=prompt,
+                        )
+                        return getattr(response, "text", str(response))
+    
+                    raise AttributeError("Connected client does not support generation.")
+    
+                except Exception as e:
+                    # Handles retries
+                    if attempt < max_retries:
+                        # Wait in increasing timeframes
+                        time.sleep(delay * attempt)
+                        continue
+    
+                    # Catches network drops or client-side issues outside the stream loop
+                    return f"Transport or connection exception: {e}"
     def _parse_response(self, raw: str) -> GeneratedRecipe:
+        """
+        Function to parse the response from the API.
+        """
+        if not raw:
+            return "No response received from the API."
+    
+        # Check for markdown formatting issues in the response, and fix them if necessary
+        if raw.startswith("```") or raw.endswith("```"):
+            raw = raw.strip("```").strip()
+    
+        # Remove `json` header to parse
+        if raw.startswith("json"):
+            raw = raw[4:]
+    
+        # Parse the response as JSON and handle any parsing errors
+        try:
+            return json.loads(raw)
+    
+        except json.JSONDecodeError as e:
+            return f"JSON parsing error: {e} \nResponse content: {raw}"
+    
 
-        pass
 
 
 # --- Constants --- #
