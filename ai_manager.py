@@ -3,54 +3,25 @@ from google import genai
 from dotenv import load_dotenv
 import os, json, time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from models import (
+    GeneratedRecipe,
+    Instruction,
+    RecipeRequest,
+    AIResult,
+    ValidationResult,
+)
 
 # --- Load Environment Variables --- #
 load_dotenv(dotenv_path="./.env")
 API_KEY = os.getenv("GENAI_API_KEY")
 
-@dataclass
-class ValidationResult:
-    is_valid: bool
-    errors: List[str] = field(default_factory=list)
 
-@dataclass
-class Instruction:
-    step: str
-    time_taken: str
-  
-@dataclass
-class RecipeRequest:
-    ingredients: Dict[str, str]
-    available_ingredients: Dict[str, str]
-    allergies: List[str]
-    dietary_preferences: List[str]
-    pax: int
-
-
-@dataclass
-class RecipeResponse:
-    name: str
-    ingredients: Dict[str, str]
-    instructions: Dict[str, Instruction]
-    confidence: float
-    equipment: List[str]
-    hazardous_ingredients: Dict[str, str]
-    insufficient_ingredients: bool
-
-
-@dataclass
-class AIResult:
-    success: bool
-    recipe: Optional[RecipeResponse] = None
-    error: Optional[str] = None 
-
-#==========================================
+# ==========================================
 class AIClient(ABC):
     @abstractmethod
     def generate(self, prompt: str) -> str:
         pass
+
 
 class GeminiClient(AIClient):
     def __init__(self, client: any):
@@ -60,34 +31,49 @@ class GeminiClient(AIClient):
         # Implementation for calling the underlying client
         return self._client.generate(prompt)
 
+
 class RecipeValidator:
-    def validate(self, response: RecipeResponse) -> ValidationResult:
-        errors: List[str] = []
-    
+    def validate(self, response: GeneratedRecipe) -> ValidationResult:
+        errors: list[str] = []
+
         if not isinstance(response.name, str) or not response.name.strip():
             errors.append("Recipe name is missing or not a non-empty string.")
 
-
         if not isinstance(response.ingredients, dict):
-            errors.append("Ingredients value is missing or not of the expected type (dict).")
+            errors.append(
+                "Ingredients value is missing or not of the expected type (dict)."
+            )
 
         if not isinstance(response.instructions, dict):
-            errors.append("Instructions value is missing or not of the expected type (dict).")
+            errors.append(
+                "Instructions value is missing or not of the expected type (dict)."
+            )
         else:
             for step_key, instruction_obj in response.instructions.items():
                 if not isinstance(step_key, str) or not step_key.isdigit():
                     errors.append(f"Step '{step_key}' key is not a numeric string.")
 
                 if not isinstance(instruction_obj, Instruction):
-                    errors.append(f"Value of step '{step_key}' is not an Instruction object.")
+                    errors.append(
+                        f"Value of step '{step_key}' is not an Instruction object."
+                    )
                 else:
-                    if not isinstance(instruction_obj.step, str) or not instruction_obj.step.strip():
-                        errors.append(f"Field 'step' in step '{step_key}' must be a non-empty string.")
+                    if (
+                        not isinstance(instruction_obj.step, str)
+                        or not instruction_obj.step.strip()
+                    ):
+                        errors.append(
+                            f"Field 'step' in step '{step_key}' must be a non-empty string."
+                        )
 
-                    if not isinstance(instruction_obj.time_taken, str) or not instruction_obj.time_taken.strip():
-                        errors.append(f"Field 'time_taken' in step '{step_key}' must be a non-empty string.")
+                    if (
+                        not isinstance(instruction_obj.time_taken, str)
+                        or not instruction_obj.time_taken.strip()
+                    ):
+                        errors.append(
+                            f"Field 'time_taken' in step '{step_key}' must be a non-empty string."
+                        )
 
-    
         if (
             response.confidence is None
             or not isinstance(response.confidence, (int, float))
@@ -96,27 +82,27 @@ class RecipeValidator:
         ):
             errors.append("Confidence value must be a number between 0 and 1.")
 
-   
         if not isinstance(response.equipment, list):
-            errors.append("Equipment value is missing or not of the expected type (list).")
+            errors.append(
+                "Equipment value is missing or not of the expected type (list)."
+            )
 
-  
         if not isinstance(response.insufficient_ingredients, bool):
             errors.append("Insufficient Ingredients value must be a boolean.")
 
-       
-        return ValidationResult(
-            is_valid=len(errors) == 0,
-            errors=errors
-        )
-    
+        return ValidationResult(is_valid=len(errors) == 0, errors=errors)
+
+
 class BaseAIManager(ABC):
     @abstractmethod
     def process(self, request: RecipeRequest) -> AIResult:
         pass
 
+
 class GeminiAIManager(BaseAIManager):
-    def __init__(self, client: AIClient, validator: RecipeValidator, max_retries: int = 3):
+    def __init__(
+        self, client: AIClient, validator: RecipeValidator, max_retries: int = 3
+    ):
         self._client = client
         self._validator = validator
         self._max_retries = max_retries
@@ -125,22 +111,28 @@ class GeminiAIManager(BaseAIManager):
         prompt = self._build_prompt(request)
         raw_response = self._call_api(prompt)
         recipe = self._parse_response(raw_response)
-        
+
         validation = self._validator.validate(recipe)
         if validation.is_valid:
             return AIResult(success=True, recipe=recipe)
         else:
             return AIResult(success=False, error=", ".join(validation.errors))
+
     def _build_prompt(self, request: RecipeRequest) -> str:
         """
         Function to build the prompt for the API call.
         """
-        ingredients_str = ', '.join(
-            f"{ingredient} ({quantity})" for ingredient, quantity in request.ingredients.items()
+        ingredients_str = ", ".join(
+            f"{ingredient} ({quantity})"
+            for ingredient, quantity in request.ingredients.items()
         )
-        allergies_str = ', '.join(request.allergies) if request.allergies else 'None'
-        dietary_preferences_str = ', '.join(request.dietary_preferences) if request.dietary_preferences else 'None'
-        pax_str = str(request.pax) if request.pax else '1'
+        allergies_str = ", ".join(request.allergies) if request.allergies else "None"
+        dietary_preferences_str = (
+            ", ".join(request.dietary_preferences)
+            if request.dietary_preferences
+            else "None"
+        )
+        pax_str = str(request.pax) if request.pax else "1"
 
         prompt = f"""You are a recipe generator. Generate a recipe using this list of ingredients and their provided amounts. 
         Not all ingredients/amounts have to be used to completion for each recipe but do not include ingredients or 
@@ -177,14 +169,14 @@ class GeminiAIManager(BaseAIManager):
                 "2": {{ "step": 'Instruction 2', "time_taken": '2min' }},
             }}
             """
+
     def _call_api(self, prompt: str) -> str:
-        
+
         return self._client.generate(prompt)
 
-    def _parse_response(self, raw: str) -> RecipeResponse:
-        
+    def _parse_response(self, raw: str) -> GeneratedRecipe:
+
         pass
-        
 
 
 # --- Constants --- #
@@ -202,6 +194,7 @@ REQUIRED_KEYS = {
 
 
 # --- Functions --- #
+
 
 def call_api(prompt: str = "", max_retries: int = 3, delay: int = 2):
     """
