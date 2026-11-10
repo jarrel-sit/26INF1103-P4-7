@@ -24,12 +24,32 @@ class AIClient(ABC):
 
 
 class GeminiClient(AIClient):
-    def __init__(self, client: genai.Client):
-        self._client = client
+    def __init__(self, api_key: str):
+        self._client = genai.Client(api_key=api_key)
+        self._model = "gemini-3.1-flash-lite"
+
 
     def generate(self, prompt: str) -> str:
         # Implementation for calling the underlying client
-        return self.call_api(prompt)
+        interaction =self._client.interactions.create(
+                    model="gemini-3.1-flash-lite",
+                    input=prompt,
+                    stream=True,  # Enable streaming to receive partial responses as they are generated
+                )
+    
+        for event in interaction:
+            # Check for error events
+            if hasattr(event, "error") and event.error:
+                return f"API Error ({event.error.code}): {event.error.message}"
+
+            # Check if the event contains text delta chunks (successful responses)
+            if (
+                hasattr(event, "delta")
+                and hasattr(event.delta, "text")
+                and event.delta.text
+            ):
+                response += event.delta.text
+        return response
 
 
 
@@ -174,36 +194,20 @@ class GeminiAIManager(BaseAIManager):
         return prompt
     
     def call_api(self, prompt: str = "", max_retries: int = 3, delay: int = 2) -> str:
-            """
-            Function to call the API and handle the response.
-            """
-            # Retries the API calls, only fail if all tries unsuccessful
-            for attempt in range(1, max_retries + 1):
-                try:
-                    if hasattr(self._client, "generate"):
-                        return self._client.generate(prompt)
+        # Retries the API calls, only fail if all tries unsuccessful
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self._client.generate(prompt)
+                return response
+            except Exception as e:
+                # Handles retries
+                if attempt < max_retries:
+                    # Wait in increasing timeframes
+                    time.sleep(delay * attempt)
+                    continue
     
-                    if (
-                        hasattr(self._client, "models")
-                        and hasattr(self._client.models, "generate_content")
-                    ):
-                        response = self._client.models.generate_content(
-                            model="gemini-2.0-flash",
-                            contents=prompt,
-                        )
-                        return getattr(response, "text", str(response))
-    
-                    raise AttributeError("Connected client does not support generation.")
-    
-                except Exception as e:
-                    # Handles retries
-                    if attempt < max_retries:
-                        # Wait in increasing timeframes
-                        time.sleep(delay * attempt)
-                        continue
-    
-                    # Catches network drops or client-side issues outside the stream loop
-                    return f"Transport or connection exception: {e}"
+                # Catches network drops or client-side issues outside the stream loop
+                return f"Transport or connection exception: {e}"
     def _parse_response(self, raw: str) -> GeneratedRecipe:
         """
         Function to parse the response from the API.
