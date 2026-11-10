@@ -10,6 +10,8 @@ class GeminiClient(AIClient):
         self._model = "gemini-3.1-flash-lite"
 
     def generate(self, prompt: str) -> str:
+        response = ""
+
         # Implementation for calling the underlying client
         interaction = self._client.interactions.create(
             model="gemini-3.1-flash-lite",

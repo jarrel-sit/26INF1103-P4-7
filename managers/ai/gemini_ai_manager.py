@@ -30,11 +30,14 @@ class GeminiAIManager(BaseAIManager):
         raw_response = self.call_api(prompt)
         recipe = self._parse_response(raw_response)
 
-        validation = self._validator.validate(recipe)
-        if validation.is_valid:
-            return AIResult(success=True, recipe=recipe)
-        else:
-            return AIResult(success=False, error=", ".join(validation.errors))
+        if isinstance(recipe, GeneratedRecipe):
+            validation = self._validator.validate(recipe)
+            if validation.is_valid:
+                return AIResult(success=True, recipe=recipe)
+            else:
+                return AIResult(success=False, error_message=", ".join(validation.errors))
+
+        return AIResult(success=False, error_message=recipe)
 
     def _build_prompt(self, request: RecipeRequest) -> str:
         """
@@ -127,10 +130,11 @@ class GeminiAIManager(BaseAIManager):
                 key: Instruction(**value)
                 for key, value in response.get("instructions", {}).items()
             }
+
             return GeneratedRecipe(
-                name=response.get("recipe", ""),
+                recipe=response.get("recipe", ""),
                 ingredients=response.get("ingredients", {}),
-                instructions=response.get("instructions", {}),
+                instructions=instructions_dict,
                 confidence=response.get("confidence", 0),
                 dietary_preferences=response.get("dietary_preferences", []),
                 hazardous_ingredients=response.get("hazardous_ingredients", {}),

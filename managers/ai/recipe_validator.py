@@ -7,7 +7,7 @@ class RecipeValidator:
     def validate(self, response: GeneratedRecipe) -> ValidationResult:
         errors: list[str] = []
 
-        if not isinstance(response.name, str) or not response.name.strip():
+        if not isinstance(response.recipe, str) or not response.recipe.strip():
             errors.append("Recipe name is missing or not a non-empty string.")
 
         if not isinstance(response.ingredients, dict):

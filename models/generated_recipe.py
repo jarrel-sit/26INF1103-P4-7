@@ -2,10 +2,11 @@
 from dataclasses import dataclass
 from .instruction import Instruction
 
+
 # --- Classes --- #
 @dataclass
 class GeneratedRecipe:
-    name: str
+    recipe: str
     ingredients: dict[str, str]
     instructions: dict[str, Instruction]
     confidence: float

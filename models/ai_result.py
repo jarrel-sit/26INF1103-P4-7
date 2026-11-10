@@ -7,5 +7,5 @@ from .generated_recipe import GeneratedRecipe
 @dataclass
 class AIResult:
     success: bool
-    recipe: GeneratedRecipe
-    error_message: str
+    recipe: GeneratedRecipe | None = None
+    error_message: str | None = None
