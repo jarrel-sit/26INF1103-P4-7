@@ -225,8 +225,21 @@ class GeminiAIManager(BaseAIManager):
     
         # Parse the response as JSON and handle any parsing errors
         try:
-            return json.loads(raw)
-    
+            response = json.loads(raw)
+            instructions_dict = {
+                key: Instruction(**value) for key, value in response.get("instructions", {}).items()
+            }
+            return GeneratedRecipe(
+                name=response.get("recipe", ""),
+                ingredients=response.get("ingredients", {}),
+                instructions=response.get("instructions", {}),
+                confidence=response.get("confidence", 0),
+                dietary_preferences=response.get("dietary_preferences", []),
+                hazardous_ingredients=response.get("hazardous_ingredients", {}),
+                equipment=response.get("equipment", []),
+                insufficient_ingredients=response.get("insufficient_ingredients", False)
+            )
+
         except json.JSONDecodeError as e:
             return f"JSON parsing error: {e} \nResponse content: {raw}"
     
