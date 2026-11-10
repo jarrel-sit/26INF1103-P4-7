@@ -1,6 +1,6 @@
 # --- Imports --- #
 from dataclasses import dataclass
-from instruction import Instruction
+from .instruction import Instruction
 
 # --- Classes --- #
 @dataclass

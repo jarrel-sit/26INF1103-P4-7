@@ -1,6 +1,6 @@
 # --- Imports --- #
 from dataclasses import dataclass
-from generated_recipe import GeneratedRecipe
+from .generated_recipe import GeneratedRecipe
 
 
 # --- Classes --- #

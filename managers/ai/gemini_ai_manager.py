@@ -1,15 +1,15 @@
 # --- Imports --- #
 import time, json
 from models import RecipeRequest, AIResult, GeneratedRecipe, Instruction
-from base_ai_manager import BaseAIManager
-from ai_client import AIClient
-from recipe_validator import RecipeValidator
+from .base_ai_manager import BaseAIManager
+from .gemini_client import GeminiClient
+from .recipe_validator import RecipeValidator
 
 
 # --- Classes --- #
 class GeminiAIManager(BaseAIManager):
     def __init__(
-        self, client: AIClient, validator: RecipeValidator, max_retries: int = 3
+        self, client: GeminiClient, validator: RecipeValidator, max_retries: int = 3
     ):
         self._client = client
         self._validator = validator

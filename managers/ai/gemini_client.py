@@ -1,6 +1,6 @@
 # --- Imports --- #
 from google import genai
-from ai_client import AIClient
+from .ai_client import AIClient
 
 
 # --- Classes --- #
