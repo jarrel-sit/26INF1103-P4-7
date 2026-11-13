@@ -145,6 +145,12 @@ def ingredient_input(
 #     for item in ingredients:
 #         print(f" - {item['ingredient']}: {item['quantity']}")
 
+def prompt_ingredient_to_delete():
+    """Asks which ingredient to delete (empty input cancels)."""
+    return input(
+        "Enter the ingredient name to delete (leave it empty to go back): "
+    ).strip().lower()
+
 # change
 def display_ingredients(record):
     if not record:
