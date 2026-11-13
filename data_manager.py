@@ -413,6 +413,16 @@ class CsvIngredientRepository(IngredientRepository):
 
         return save(self.__filepath, FIELDNAMES, rows, mode="w", logger=self.__logger)
 
+    def delete(self, name):
+        name = str(name).strip().lower()
+        rows = load_ingredients(self.__filepath, logger=self.__logger)
+        remaining = [r for r in rows if str(r["ingredient"]).strip().lower() != name]
+
+        if len(remaining) == len(rows):      # nothing matched
+            return False
+        return save(self.__filepath, FIELDNAMES, remaining,
+                    mode="w", logger=self.__logger)    
+
 class CsvRecipeRepository(RecipeRepository):
     def __init__(self, filepath=DEFAULT_RECIPES_FILEPATH, logger=None):
         self.__filepath = filepath
