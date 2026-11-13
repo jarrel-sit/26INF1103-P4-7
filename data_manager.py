@@ -351,6 +351,10 @@ class IngredientRepository(ABC):
     def find_all(self):
         pass
 
+    @abstractmethod
+    def delete(self, name):
+        pass
+
 class RecipeRepository(ABC):
     """Contract for storing and querying evaluated recipes."""
 
