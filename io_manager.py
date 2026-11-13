@@ -243,7 +243,7 @@ def validate_menu(choice, options):
     return None
 
 #Menu formatting + validation
-def menu(options=5):
+def menu(options=6):
     print("""
 =================================
 |           Main Menu           |
@@ -253,7 +253,8 @@ def menu(options=5):
 |  2. List current ingredients  |
 |  3. Recommend me a recipe!    |
 |  4. View past recipes         |
-|  5. Exit                      |
+|  5. Delete an ingredient      |
+|  6. Exit                      |
 |                               |
 =================================""")
 
