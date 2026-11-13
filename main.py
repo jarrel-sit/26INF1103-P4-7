@@ -116,6 +116,20 @@ def add_ingredients(record, ingredient_repo):
 
     return record
 
+def delete_ingredient(record, ingredient_repo):
+    io_manager.display_ingredients(record)
+    name = io_manager.prompt_ingredient_to_delete()
+
+    if not name:
+        io_manager.display_logs("No ingredient entered. Returning...")
+        return record
+
+    if ingredient_repo.delete(name):
+        io_manager.display_logs(f"Deleted '{name}' from your ingredients.")
+    else:
+        io_manager.display_error(f"'{name}' was not found in your ingredients.")
+
+    return ingredient_repo.find_all()
 
 # --- Main Program --- #
 def main(logger):
@@ -196,7 +210,9 @@ def main(logger):
                 # Exit back to main menu
                 elif sub_choice == 4:
                     break
-
+        # Delete an ingredient
+        elif choice == 5:
+            ingredients = delete_ingredient(ingredients, ingredient_repo)
         # Exit program
         else:
             break
