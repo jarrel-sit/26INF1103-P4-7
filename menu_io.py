@@ -1,6 +1,6 @@
 #Imports
 from abc import ABC, abstractmethod
-from display import Display
+from display_io import Display
 #Menu and its Children Classes (Main Menu and Submenu)
 class Menu(ABC):
      def __init__(self, choices):
