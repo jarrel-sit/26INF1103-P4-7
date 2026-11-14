@@ -413,3 +413,88 @@ def test_quantity_comparison_helpers():
     assert not Quantity(100, "g").covers(Quantity(200, "g"))
 
 
+# ==========================================
+# 6. OOP CONCEPTS - evidence in tests
+# ==========================================
+def test_abstract_classes_and_interfaces_cannot_be_instantiated():
+    for abstract in (IRule, IScorer):
+        with pytest.raises(TypeError):
+            abstract()
+    with pytest.raises(TypeError):
+        BaseRule("x", Severity.ADVISORY)  # _check / failure_reason still abstract
+
+
+def test_default_rules_inherit_from_base_rule_and_implement_the_interface():
+    rules = LogicManager.default_rules()
+    assert len(rules) == 5
+    for rule in rules:
+        assert isinstance(rule, BaseRule) and isinstance(rule, IRule)
+    assert len({rule.name for rule in rules}) == 5  # unique names
+
+
+def test_weighted_scorer_implements_the_scorer_interface():
+    assert issubclass(WeightedScorer, IScorer)
+
+
+def test_encapsulation_record_is_read_only(typed_record):
+    with pytest.raises(AttributeError):
+        typed_record.confidence = 1.0
+    # returned collections are copies - changing them does not change the record
+    typed_record.allergies.append("peanuts")
+    typed_record.ingredients["gold"] = "1g"
+    assert typed_record.allergies == []
+    assert "gold" not in typed_record.ingredients
+
+
+def test_encapsulation_manager_internals_are_private(manager):
+    for name in ("scorer", "router", "evaluator", "validator", "rules"):
+        assert not hasattr(manager, name)
+
+
+def test_composition_evaluation_owns_its_rule_results(manager):
+    evaluation = manager.evaluate(make_record())
+    assert all(isinstance(result, RuleResult) for result in evaluation.results)
+    assert evaluation.result_for("cooking_time").passed
+    with pytest.raises(KeyError):
+        evaluation.result_for("no_such_rule")
+
+
+def test_composition_record_owns_its_quantities(typed_record):
+    assert typed_record.required_quantities["chicken"] == Quantity(200, "g")
+    assert typed_record.available_quantities["rice"] == Quantity(200, "g")
+
+
+def test_aggregation_rules_outlive_and_are_shared_between_managers():
+    shared = AllergyRule()
+    first = LogicManager(rules=[shared])
+    second = LogicManager(rules=[shared])
+    del first  # the shared rule keeps working without its first owner
+    assert second.route(make_record(allergies=["rice"])).outcome is Outcome.REJECT
+    assert shared.evaluate(RecordValidator().validate(make_record())).passed
+
+
+def test_association_manager_uses_the_validator_it_is_given():
+    class CountingValidator(RecordValidator):
+        calls = 0
+
+        def validate(self, raw):
+            CountingValidator.calls += 1
+            return super().validate(raw)
+
+    LogicManager(validator=CountingValidator()).route(make_record())
+    assert CountingValidator.calls == 1
+
+
+def test_rule_evaluator_needs_rules_and_unique_names():
+    with pytest.raises(ValueError):
+        RuleEvaluator([])
+    with pytest.raises(ValueError):
+        RuleEvaluator([AllergyRule(), AllergyRule()])
+
+
+def test_logic_manager_does_no_console_io():
+    """Phase 1 constraint still holds: print()/input() live only in io_manager."""
+    source = inspect.getsource(logic_manager)
+    assert "print(" not in source and "input(" not in source
+
+
