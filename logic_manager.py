@@ -379,3 +379,188 @@ class Evaluation:
         }
 
 
+# ===========================================================================
+# === Rules: interface -> abstract base class -> concrete rules =============
+# ===========================================================================
+class IRule(ABC):
+    """Interface (contract) every business rule must honour."""
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Unique name of the rule."""
+
+    @property
+    @abstractmethod
+    def severity(self) -> Severity:
+        """BLOCKING rules reject on failure, ADVISORY rules flag."""
+
+    @abstractmethod
+    def evaluate(self, record: RecipeRecord) -> RuleResult:
+        """Run the rule. Must return a RuleResult for any valid RecipeRecord."""
+
+
+class BaseRule(IRule):
+    """Abstract class holding the behaviour every rule shares (name, severity,
+    and building the RuleResult). Subclasses only supply the rule itself."""
+
+    def __init__(self, name: str, severity: Severity, result_label: str = None):
+        self._name = name
+        self._severity = severity
+        self._result_label = result_label or name
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def severity(self) -> Severity:
+        return self._severity
+
+    def evaluate(self, record: RecipeRecord) -> RuleResult:
+        # Template method: shared steps here, the rule-specific part in _check()
+        details = dict(self._check(record))
+        passed = bool(details.pop("passed"))
+
+        return RuleResult(
+            self._name,
+            passed,
+            details,
+            self._severity,
+            self.failure_reason(),
+            self._result_label,
+        )
+
+    @abstractmethod
+    def _check(self, record: RecipeRecord) -> dict:
+        """Return {"passed": bool, ...any details to report}."""
+
+    @abstractmethod
+    def failure_reason(self) -> str:
+        """Short text used in the routing reason when this rule fails."""
+
+
+class IngredientAvailabilityRule(BaseRule):
+    """Only recommend recipes using ingredients the user has, or flag what
+    needs to be bought."""
+
+    def __init__(self):
+        super().__init__("ingredient_availability", Severity.ADVISORY)
+
+    def _check(self, record: RecipeRecord) -> dict:
+        have = record.available_quantities
+        missing = []
+
+        for item, needed in record.required_quantities.items():
+            if item not in have:
+                missing.append(item)
+                continue
+
+            available = have[item]
+
+            # Only compare real amounts, and only when the units line up
+            if needed.amount > 0 and available.amount > 0:
+                if available.is_comparable_to(needed) and not available.covers(needed):
+                    missing.append(item)
+
+        return {"passed": len(missing) == 0, "missing_ingredients": sorted(missing)}
+
+    def failure_reason(self) -> str:
+        return "missing or insufficient ingredients"
+
+
+class AllergyRule(BaseRule):
+    """Reject any recipe that conflicts with a stated allergy."""
+
+    def __init__(self):
+        super().__init__("allergy_restrictions", Severity.BLOCKING)
+
+    def _check(self, record: RecipeRecord) -> dict:
+        allergies = {a.strip().lower() for a in record.allergies}
+        ingredients = {i.strip().lower() for i in record.ingredients}
+        conflicts = allergies & ingredients
+
+        return {"passed": len(conflicts) == 0, "conflicting_allergens": sorted(conflicts)}
+
+    def failure_reason(self) -> str:
+        return "allergy conflict"
+
+
+class DietaryRule(BaseRule):
+    """Recipe must follow the user's selected dietary requirements."""
+
+    def __init__(self):
+        super().__init__("dietary_restrictions", Severity.ADVISORY)
+
+    def _check(self, record: RecipeRecord) -> dict:
+        diets = {d.strip().lower() for d in record.dietary_preferences}
+        ingredients = record.ingredients
+        unmet = {diet for diet in diets if diet in ingredients}
+
+        return {"passed": len(unmet) == 0, "unmet_preferences": sorted(unmet)}
+
+    def failure_reason(self) -> str:
+        return "dietary preference not met"
+
+
+class CookingTimeRule(BaseRule):
+    """Recipe should match the user's max cooking-time preference where possible."""
+
+    def __init__(self):
+        super().__init__("cooking_time", Severity.ADVISORY)
+
+    def _check(self, record: RecipeRecord) -> dict:
+        max_time = record.cooking_time_limit
+        estimated = record.estimated_cooking_time
+
+        return {
+            "passed": max_time is None or estimated <= max_time,
+            "estimated_minutes": estimated,
+            "max_minutes": max_time,
+        }
+
+    def failure_reason(self) -> str:
+        return "exceeds max cooking time"
+
+
+class AIConfidenceRule(BaseRule):
+    """Guards the logic layer against acting on a low-confidence AI response."""
+
+    def __init__(self, min_confidence: float = 0.6):
+        super().__init__("ai_confidence", Severity.BLOCKING, "ai_confidence_threshold")
+        self.__min_confidence = min_confidence
+
+    def _check(self, record: RecipeRecord) -> dict:
+        return {
+            "passed": record.confidence >= self.__min_confidence,
+            "confidence": record.confidence,
+            "threshold": self.__min_confidence,
+        }
+
+    def failure_reason(self) -> str:
+        return "AI confidence too low"
+
+
+class RuleEvaluator:
+    """Runs a set of rules against a record. Holds the rules it is given
+    (aggregation: rules can exist and be reused outside this evaluator).
+    Treats every rule as an IRule - no type-specific branching."""
+
+    def __init__(self, rules: Iterable[IRule]):
+        self.__rules = []
+
+        for rule in rules:
+            self.add_rule(rule)
+
+        if not self.__rules:
+            raise ValueError("RuleEvaluator needs at least one rule.")
+
+    def add_rule(self, rule: IRule) -> None:
+        if any(existing.name == rule.name for existing in self.__rules):
+            raise ValueError(f"A rule named '{rule.name}' is already registered.")
+
+        self.__rules.append(rule)
+
+    def evaluate(self, record: RecipeRecord) -> Evaluation:
+        return Evaluation(record.recipe, [rule.evaluate(record) for rule in self.__rules])
+
