@@ -310,3 +310,106 @@ def test_route_batch_isolates_a_malformed_record(manager):
     assert ranked[1].reason.startswith("invalid AI record")
 
 
+# ==========================================
+# 4. AI-OUTPUT VALIDATION (error cases)
+# ==========================================
+@pytest.mark.parametrize(
+    "bad_fields, expected_field",
+    [
+        ({"recipe": 42}, "recipe"),
+        ({"ingredients": ["chicken"]}, "ingredients"),
+        ({"ingredients": {1: "2g"}}, "ingredients"),
+        ({"confidence": "high"}, "confidence"),
+        ({"confidence": 1.5}, "confidence"),
+        ({"confidence": -0.1}, "confidence"),
+        ({"confidence": True}, "confidence"),
+        ({"confidence": float("nan")}, "confidence"),
+        ({"allergies": "peanuts"}, "allergies"),
+        ({"allergies": [1, 2]}, "allergies"),
+        ({"dietary_preferences": "vegan"}, "dietary_preferences"),
+        ({"available_ingredients": None}, "available_ingredients"),
+        ({"ingredients_used": "rice"}, "ingredients_used"),
+        ({"max_cooking_time_minutes": "30"}, "max_cooking_time_minutes"),
+        ({"estimated_cooking_time_minutes": None}, "estimated_cooking_time_minutes"),
+        ({"instructions": None}, "instructions"),
+    ],
+)
+def test_malformed_field_raises_invalid_record_error(manager, bad_fields, expected_field):
+    with pytest.raises(InvalidRecordError) as error:
+        manager.route(make_record(**bad_fields))
+    assert error.value.field == expected_field
+    assert expected_field in str(error.value)
+
+
+@pytest.mark.parametrize("missing", ["recipe", "ingredients", "confidence"])
+def test_missing_required_field_raises_invalid_record_error(manager, missing):
+    record = make_record()
+    del record[missing]
+    with pytest.raises(InvalidRecordError) as error:
+        manager.route(record)
+    assert error.value.field == missing
+
+
+@pytest.mark.parametrize("not_a_record", [None, "text", 42, ["a"], ()])
+def test_non_dict_record_raises_invalid_record_error(manager, not_a_record):
+    with pytest.raises(InvalidRecordError) as error:
+        manager.route(not_a_record)
+    assert error.value.field == "record"
+
+
+def test_every_public_entry_point_guards_against_bad_records(manager):
+    bad = make_record(confidence=2)
+    for call in (manager.evaluate, manager.score, manager.route):
+        with pytest.raises(InvalidRecordError):
+            call(bad)
+
+
+def test_invalid_record_error_is_a_logic_manager_error():
+    assert issubclass(InvalidRecordError, LogicManagerError)
+
+
+def test_optional_fields_can_be_left_out(manager):
+    minimal = {"recipe": "Plain Rice", "ingredients": {"rice": "100g"}, "confidence": 0.9}
+    decision = manager.route(minimal)
+    assert decision.outcome is Outcome.FLAG  # nothing on hand -> missing ingredient
+
+
+def test_validation_does_not_modify_the_callers_record(manager):
+    record = make_record()
+    snapshot = copy.deepcopy(record)
+    manager.route(record)
+    assert record == snapshot
+
+
+# ==========================================
+# 5. QUANTITY (replaces Phase 1 parse_quantity)
+# ==========================================
+@pytest.mark.parametrize(
+    "raw, amount, unit",
+    [
+        ("200g", 200.0, "g"),
+        ("1.5 KG", 1.5, "kg"),
+        ("  40 ml ", 40.0, "ml"),
+        ("2", 2.0, ""),
+        (5, 5.0, ""),
+        (2.5, 2.5, ""),
+        ("abc", 0.0, ""),
+        ("", 0.0, ""),
+        ("1.2.3", 0.0, ""),
+        (None, 0.0, ""),
+        ([1], 0.0, ""),
+    ],
+)
+def test_quantity_parse(raw, amount, unit):
+    quantity = Quantity.parse(raw)
+    assert (quantity.amount, quantity.unit) == (amount, unit)
+
+
+def test_quantity_comparison_helpers():
+    assert Quantity(200, "g").is_comparable_to(Quantity(5, "g"))
+    assert Quantity(200, "g").is_comparable_to(Quantity(5))  # one side has no unit
+    assert not Quantity(200, "g").is_comparable_to(Quantity(5, "ml"))
+    assert Quantity(200, "g").covers(Quantity(200, "g"))
+    assert not Quantity(100, "g").covers(Quantity(200, "g"))
+
+
