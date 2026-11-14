@@ -498,3 +498,113 @@ def test_logic_manager_does_no_console_io():
     assert "print(" not in source and "input(" not in source
 
 
+# ==========================================
+# 7. SOLID EVIDENCE
+# ==========================================
+# --- LSP: every rule can stand in for IRule and keeps the same contract ----
+CUSTOM_EXAMPLE_RECORDS = [
+    make_record(),
+    {"recipe": "Bare", "ingredients": {}, "confidence": 0.0},
+    make_record(allergies=["chicken"], confidence=0.1, max_cooking_time_minutes=1),
+]
+
+
+@pytest.mark.parametrize("rule", LogicManager.default_rules(), ids=lambda r: r.name)
+@pytest.mark.parametrize("raw", CUSTOM_EXAMPLE_RECORDS)
+def test_lsp_every_rule_honours_the_irule_contract(rule, raw):
+    record = RecordValidator().validate(raw)
+    snapshot = (record.ingredients, record.allergies, record.confidence)
+
+    result = rule.evaluate(record)
+
+    assert isinstance(result, RuleResult)
+    assert isinstance(result.passed, bool)
+    assert result.rule_name == rule.name
+    assert isinstance(rule.severity, Severity)
+    assert {"rule", "passed"} <= set(result.to_dict())
+    assert (record.ingredients, record.allergies, record.confidence) == snapshot  # no side effects
+
+
+# --- OCP: new behaviour by adding a class, not editing existing ones -------
+class NoShellfishRule(BaseRule):
+    """A brand-new BLOCKING rule, written without touching logic_manager.py."""
+
+    def __init__(self):
+        super().__init__("no_shellfish", Severity.BLOCKING)
+
+    def _check(self, record):
+        found = sorted(i for i in record.ingredients if i.lower() in {"prawn", "crab"})
+        return {"passed": not found, "shellfish_found": found}
+
+    def failure_reason(self):
+        return "contains shellfish"
+
+
+class MaxIngredientsRule(BaseRule):
+    """A brand-new ADVISORY rule."""
+
+    def __init__(self, limit=3):
+        super().__init__("max_ingredients", Severity.ADVISORY)
+        self.__limit = limit
+
+    def _check(self, record):
+        return {"passed": len(record.ingredients) <= self.__limit}
+
+    def failure_reason(self):
+        return "too many ingredients"
+
+
+def test_ocp_new_blocking_rule_rejects_without_editing_existing_code():
+    extended = LogicManager(rules=LogicManager.default_rules() + [NoShellfishRule()])
+    record = make_record(
+        ingredients={"prawn": "100g"}, available_ingredients={"prawn": "100g"}
+    )
+
+    decision = extended.route(record)
+
+    assert decision.outcome is Outcome.REJECT
+    assert decision.reason == "contains shellfish"
+    assert "no_shellfish" in decision.to_dict()["rule_results"]
+    # the standard manager is unaffected
+    assert LogicManager().route(record).outcome is Outcome.ACCEPT
+
+
+def test_ocp_new_advisory_rule_flags_without_editing_existing_code():
+    extended = LogicManager(rules=LogicManager.default_rules() + [MaxIngredientsRule(1)])
+    decision = extended.route(make_record())
+    assert decision.outcome is Outcome.FLAG
+    assert decision.reason == "too many ingredients"
+
+
+# --- OCP / polymorphism: any IScorer can be swapped in ---------------------
+class FixedScorer(IScorer):
+    def score(self, record):
+        return 42.0
+
+
+def test_polymorphism_manager_works_with_any_scorer():
+    manager = LogicManager(scorer=FixedScorer())
+    decision = manager.route(make_record())
+    assert decision.score == 42.0
+    assert decision.outcome is Outcome.ACCEPT  # routing is independent of the scorer
+
+
+# --- SRP: each class has one reason to change ------------------------------
+def test_srp_router_only_decides_from_an_existing_evaluation(typed_record):
+    """OutcomeRouter needs no rules and no scorer - just an Evaluation and a score."""
+    stub = Evaluation(
+        "Stub",
+        [
+            RuleResult("a", False, {}, Severity.ADVISORY, "advisory problem"),
+            RuleResult("b", True, {}, Severity.BLOCKING, "never used"),
+        ],
+    )
+    decision = logic_manager.OutcomeRouter().decide(typed_record, stub, 12.5)
+    assert isinstance(decision, RoutingDecision)
+    assert (decision.outcome, decision.reason, decision.score) == (
+        Outcome.FLAG, "advisory problem", 12.5,
+    )
+
+
+def test_srp_scorer_is_independent_of_the_rules(typed_record):
+    assert WeightedScorer().score(typed_record) == 97.5
