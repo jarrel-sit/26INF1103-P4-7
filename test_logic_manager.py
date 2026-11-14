@@ -238,3 +238,75 @@ def test_route_dict_keeps_the_phase_1_shape(manager):
     assert result["instructions"] == make_record()["instructions"]
 
 
+# ==========================================
+# 2. SCORING
+# ==========================================
+def test_score_full_marks_when_everything_fits(manager):
+    assert manager.score(make_record(confidence=1.0)) == 100.0
+
+
+def test_score_blends_confidence_ingredients_and_time(manager):
+    # confidence 0.8 -> 0.40 ; half the used ingredients on hand -> 0.35*0.5 ;
+    # 45 min vs 30 min limit -> time ratio 0.5 -> 0.15*0.5   => 65.0
+    record = make_record(
+        confidence=0.8,
+        available_ingredients={"chicken": "300g"},
+        estimated_cooking_time_minutes=45,
+        max_cooking_time_minutes=30,
+    )
+    assert manager.score(record) == 65.0
+
+
+def test_score_time_penalty_never_goes_below_zero(manager):
+    record = make_record(
+        confidence=1.0, estimated_cooking_time_minutes=500, max_cooking_time_minutes=30
+    )
+    assert manager.score(record) == 85.0  # 0.5 + 0.35 + 0 -> time ratio floored at 0
+
+
+def test_score_without_ingredients_used_counts_as_complete(manager):
+    record = make_record(confidence=1.0)
+    del record["ingredients_used"]
+    assert manager.score(record) == 100.0
+
+
+def test_custom_weights_change_the_score():
+    scorer = WeightedScorer(confidence=1.0, ingredients=0.0, time=0.0)
+    manager = LogicManager(scorer=scorer)
+    assert manager.score(make_record(confidence=0.7)) == 70.0
+
+
+@pytest.mark.parametrize("weights", [(0.5, 0.5, 0.5), (-0.5, 1.0, 0.5), (0.2, 0.2, 0.2)])
+def test_scoring_weights_must_be_non_negative_and_sum_to_one(weights):
+    with pytest.raises(ValueError):
+        ScoringWeights(*weights)
+
+
+# ==========================================
+# 3. BATCH ROUTING
+# ==========================================
+def test_route_batch_ranks_accept_then_flag_then_reject_by_score(manager):
+    reject = make_record(recipe="D-reject", allergies=["rice"], confidence=0.99)
+    flag = make_record(recipe="C-flag", available_ingredients={"chicken": "300g"})
+    accept_low = make_record(recipe="B-accept", confidence=0.7)
+    accept_high = make_record(recipe="A-accept", confidence=0.95)
+
+    ranked = manager.route_batch([reject, flag, accept_low, accept_high])
+
+    assert [d.recipe for d in ranked] == ["A-accept", "B-accept", "C-flag", "D-reject"]
+    assert [d.score for d in ranked[:3]] == [97.5, 85.0, 80.0]
+
+
+def test_route_batch_of_nothing_is_empty(manager):
+    assert manager.route_batch([]) == []
+
+
+def test_route_batch_isolates_a_malformed_record(manager):
+    bad = make_record(recipe="Broken", confidence="very high")
+    ranked = manager.route_batch([bad, make_record(recipe="Good")])
+
+    assert [d.recipe for d in ranked] == ["Good", "Broken"]
+    assert ranked[1].outcome is Outcome.REJECT
+    assert ranked[1].reason.startswith("invalid AI record")
+
+
