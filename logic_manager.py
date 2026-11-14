@@ -564,3 +564,77 @@ class RuleEvaluator:
     def evaluate(self, record: RecipeRecord) -> Evaluation:
         return Evaluation(record.recipe, [rule.evaluate(record) for rule in self.__rules])
 
+
+# ===========================================================================
+# === Scoring: interface -> concrete scorer =================================
+# ===========================================================================
+class IScorer(ABC):
+    """Interface (contract) for anything that can score a record from 0-100."""
+
+    @abstractmethod
+    def score(self, record: RecipeRecord) -> float:
+        """Return a number from 0 to 100."""
+
+
+class ScoringWeights:
+    """How much each factor counts towards the score. Must add up to 1."""
+
+    def __init__(
+        self, confidence: float = 0.5, ingredients: float = 0.35, time: float = 0.15
+    ):
+        weights = (confidence, ingredients, time)
+
+        if any(weight < 0 for weight in weights) or not math.isclose(sum(weights), 1.0):
+            raise ValueError("Scoring weights must be non-negative and add up to 1.")
+
+        self.__confidence = confidence
+        self.__ingredients = ingredients
+        self.__time = time
+
+    @property
+    def confidence(self) -> float:
+        return self.__confidence
+
+    @property
+    def ingredients(self) -> float:
+        return self.__ingredients
+
+    @property
+    def time(self) -> float:
+        return self.__time
+
+
+class WeightedScorer(IScorer):
+    """Produces a 0-100 score used to rank candidate recipes. Rewards high AI
+    confidence, then having the ingredients on hand, then staying within the
+    time budget. Owns its ScoringWeights."""
+
+    def __init__(
+        self, confidence: float = 0.5, ingredients: float = 0.35, time: float = 0.15
+    ):
+        self.__weights = ScoringWeights(confidence, ingredients, time)
+
+    def score(self, record: RecipeRecord) -> float:
+        weighted = (
+            (record.confidence * self.__weights.confidence)
+            + (self.__ingredient_ratio(record) * self.__weights.ingredients)
+            + (self.__time_ratio(record) * self.__weights.time)
+        )
+
+        return round(weighted * 100, 1)
+
+    def __ingredient_ratio(self, record: RecipeRecord) -> float:
+        needed = {i.strip().lower() for i in record.ingredients_used}
+        have = {i.strip().lower() for i in record.available_ingredients}
+
+        return len(needed & have) / len(needed) if needed else 1.0
+
+    def __time_ratio(self, record: RecipeRecord) -> float:
+        max_time = record.cooking_time_limit
+        estimated = record.estimated_cooking_time
+
+        if max_time and estimated > max_time:
+            return max(0.0, min(1.0, 1 - (estimated - max_time) / max_time))
+
+        return 1.0
+
