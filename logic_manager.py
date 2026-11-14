@@ -287,3 +287,95 @@ class RecordValidator:
 
         return value
 
+
+# ===========================================================================
+# === Rule results ==========================================================
+# ===========================================================================
+class RuleResult:
+    """What one rule found. Created by a rule, then owned by an Evaluation."""
+
+    def __init__(
+        self,
+        rule_name: str,
+        passed: bool,
+        details: dict,
+        severity: Severity,
+        failure_reason: str,
+        label: str = None,
+    ):
+        self.__rule_name = rule_name
+        self.__passed = passed
+        self.__details = dict(details)
+        self.__severity = severity
+        self.__failure_reason = failure_reason
+        self.__label = label or rule_name
+
+    @property
+    def rule_name(self) -> str:
+        return self.__rule_name
+
+    @property
+    def passed(self) -> bool:
+        return self.__passed
+
+    @property
+    def details(self) -> dict:
+        return dict(self.__details)
+
+    @property
+    def severity(self) -> Severity:
+        return self.__severity
+
+    @property
+    def failure_reason(self) -> str:
+        return self.__failure_reason
+
+    def to_dict(self) -> dict:
+        """Same shape the Phase 1 rule functions returned."""
+        return {"rule": self.__label, "passed": self.__passed, **self.__details}
+
+
+class Evaluation:
+    """The outcome of running every rule against one record.
+    Owns its RuleResults. Does not decide a final outcome - that's the router's job."""
+
+    def __init__(self, recipe: str, results: Iterable[RuleResult]):
+        self.__recipe = recipe
+        self.__results = list(results)
+
+    @property
+    def recipe(self) -> str:
+        return self.__recipe
+
+    @property
+    def results(self) -> tuple:
+        return tuple(self.__results)
+
+    def failed(self, severity: Severity) -> list:
+        """Failed results of the given severity, in rule order."""
+        return [
+            result
+            for result in self.__results
+            if not result.passed and result.severity is severity
+        ]
+
+    def result_for(self, rule_name: str) -> RuleResult:
+        for result in self.__results:
+            if result.rule_name == rule_name:
+                return result
+
+        raise KeyError(rule_name)
+
+    def all_passed(self) -> bool:
+        return all(result.passed for result in self.__results)
+
+    def to_dict(self) -> dict:
+        """Same decision dict shape the Phase 1 evaluate() returned."""
+        return {
+            "recipe": self.__recipe,
+            "rule_results": {
+                result.rule_name: result.to_dict() for result in self.__results
+            },
+        }
+
+
