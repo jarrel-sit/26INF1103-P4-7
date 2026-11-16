@@ -1,7 +1,7 @@
 import re
 
 
-# Quantity ==== #an amount plus a unit, e.g. 200g
+# Quantity ==== an amount plus a unit, e.g. 200g
 
 class Quantity:
     """An amount plus a unit, e.g. 200 g. Replaces Phase 1 parse_quantity()."""
