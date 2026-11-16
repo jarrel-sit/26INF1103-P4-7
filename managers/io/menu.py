@@ -1,0 +1,37 @@
+# --- Imports --- #
+from abc import ABC, abstractmethod
+from .display_io import Display
+from .menu_validator import MenuValidator
+
+
+# --- Classes --- #
+class Menu(ABC):
+    """Abstract base class for menu and its children classes"""
+
+    def __init__(self, choices):
+        self.choices = choices
+        self._validator = MenuValidator
+        self._displayer = Display
+
+    @abstractmethod
+    def display_menu_text(self):
+        pass
+
+    def get_choice(self):
+        while True:
+            user_choice = input("> ").strip()
+            success = self.validate_choice(user_choice)
+            if success:
+                self.choice = user_choice
+                return self.choice
+            else:
+                self._displayer.display_error(
+                    self, "Invalid Option, please choose again"
+                )
+
+    def validate_choice(self, user_choice):
+        return self._validator.validate(user_choice, self.choices)
+
+    def execute(self):
+        self.display_menu_text()
+        self.get_choice()
