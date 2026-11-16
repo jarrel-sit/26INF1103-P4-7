@@ -1,4 +1,4 @@
-# --- Imports ---#
+# --- Imports --- #
 from .recipe_request_validator import RecipeRequestValidator
 from .display_io import Display
 
@@ -77,7 +77,7 @@ class RecipeRequestCollector:
         self.user_ingredients = []
         while True:
             ingredient = input(
-                "Input ingredients and quantity, following this format E.g: Apple: 50g \n"
+                "Input ingredients and quantity, following this format E.g: apple 50g \n"
             )
             success = self.__validator.validate_ingredients(self, ingredient)
             if success:

@@ -1,14 +1,16 @@
 # --- Imports --- #
 from .menu import Menu
 
+
 # --- Classes --- #
 class MainMenu(Menu):
-     def __init__(self):
-          super().__init__(choices=6)
+    def __init__(self):
+        super().__init__(choices=6)
 
-     def display_menu_text(self):
-          self._displayer.display_menu(self,
-               """
+    def display_menu_text(self):
+        self._displayer.display_menu(
+            self,
+            """
 =================================
 |           Main Menu           |
 |-------------------------------|
@@ -19,4 +21,5 @@ class MainMenu(Menu):
 |  4. View past recipes         |
 |  5. Exit                      |
 |                               |
-=================================""")
+=================================""",
+        )

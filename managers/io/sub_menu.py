@@ -4,11 +4,11 @@ from .menu import Menu
 
 # --- Classes --- #
 class SubMenu(Menu):
-     def __init__(self):
-          super().__init__(choices=4)
+    def __init__(self):
+        super().__init__(choices=4)
 
-     def display_menu_text(self):
-          self._displayer.display_menu("""
+    def display_menu_text(self):
+        self._displayer.display_menu("""
 =================================
 |      Past Recipes Submenu     |
 |-------------------------------|
@@ -17,4 +17,3 @@ class SubMenu(Menu):
 |  3. Filter by Ingredient      |
 |  4. Back to Main Menu         |
 =================================""")
-          

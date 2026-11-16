@@ -1,8 +1,8 @@
-# --- Imports ---#
+# --- Imports --- #
 import re
 
 
-# --- Classes ---#
+# --- Classes --- #
 class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
