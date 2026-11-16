@@ -6,6 +6,10 @@ import re
 class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
+    def __init__(self):
+        self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)"
+        self.quantity_pattern = r"(\d+)\s*(g|ml)"
+
     # Validation for diet
     def validate_diet(self, diet, dietlist):
         if diet in dietlist:
@@ -23,9 +27,8 @@ class RecipeRequestValidator:
             return True
 
     # Validation for ingredients
-    def validate_ingredients(self, ingredient, available_ingredients):
-        pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)"
-        match = re.match(pattern, ingredient)
+    def validate_ingredients(self, ingredient, available_ingredients=None):
+        match = re.match(self.input_pattern, ingredient)
         if match and re.search(r"[^\w\s]", ingredient) is None:
             name = match.group(1)
             if (
@@ -33,26 +36,36 @@ class RecipeRequestValidator:
                 and match.group(3) == "ml"
                 or match.group(3) == "g"
             ):
-                if self.validate_quantity(name, match.group(2), available_ingredients):
-                    quantity = match.group(2) + match.group(3)
-                    print(
-                        f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
+                if available_ingredients is not None:
+                    success = self.validate_quantity(
+                        name, match.group(2), match.group(3), available_ingredients
                     )
-                    ingredient = {name: quantity}
+                    if success:
+                        quantity = match.group(2) + match.group(3)
+                        print(
+                            f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
+                        )
+                        ingredient = {name: quantity}
 
-                    return ingredient
+                        return ingredient
 
             else:
                 print(
                     "Invalid item detected. Please ensure that ingredient entered follows the proper format."
                 )
 
-    def validate_quantity(self, ingredient, quantity, available_ingredients):
+    def validate_quantity(self, ingredient, quantity, unit, available_ingredients):
         """Validates the quantity of the ingredient input by the user."""
         if ingredient in available_ingredients:
-            available_quantity = available_ingredients[ingredient]
-            if quantity.isdigit() and int(quantity) <= int(
-                re.search(r"\d+", available_quantity).group()
+            match = re.match(self.quantity_pattern, available_ingredients[ingredient])
+
+            available_quantity = match.group(1)
+            available_unit = match.group(2)
+
+            if (
+                quantity.isdigit()
+                and unit == available_unit
+                and int(quantity) <= int(available_quantity)
             ):
                 return True
 
