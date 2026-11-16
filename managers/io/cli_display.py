@@ -70,3 +70,20 @@ class CLIDisplay(Display):
     # Displays menu formatting
     def display_menu(self, message):
         print(message)
+
+    def display_recipe_list(self, recipes):
+        if not recipes:
+            print("No recipes found.")
+            return
+
+        print("\n--- Past Recipes ---")
+        for idx, recipe in enumerate(recipes, start=1):
+            print(
+                f"{idx}. {recipe.get('recipe', 'N/A')} - Outcome: {recipe.get('outcome', 'N/A').upper()} (Score: {recipe.get('score', 0)})"
+            )
+
+    def display_used_ingredients(self, used_ingredients: list[str]) -> None:
+        print("\nFilter Past Recipes by Ingredient:")
+        for idx, name in enumerate(used_ingredients, start=1):
+            print(f"  {idx}. {name}")
+        print("  0. Cancel")
