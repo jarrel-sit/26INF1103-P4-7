@@ -27,7 +27,7 @@ class RecordValidator:
             ),
             estimated_cooking_time=self.__number(
                 raw, "estimated_cooking_time_minutes", default=0
-            ),
+            ) or 0,
             instructions=self.__str_key_dict(raw, "instructions"),
         )
 
