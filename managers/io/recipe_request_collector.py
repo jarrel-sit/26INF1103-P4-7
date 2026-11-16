@@ -1,7 +1,7 @@
 # --- Imports --- #
 from .recipe_request_validator import RecipeRequestValidator
 from .display import Display
-
+from models import RecipeRequest
 
 # Collects all the inputs needed for the recipe
 class RecipeRequestCollector:
@@ -18,12 +18,20 @@ class RecipeRequestCollector:
         self._display = display
 
     # Consolidates diet,allergy and ingredients
-    def collect_input(self):
+    def collect_input(self, available_ingredients: list[str] = None) -> list | None:
         diet = self._collect_diet()
         allergy = self._collect_allergy()
-        ingredients = self._collect_ingredients()
-        self.record = [allergy, diet, ingredients]
-        return self.record
+
+        self._display.display_ingredients(available_ingredients)
+        ingredients = self._collect_ingredients(available_ingredients)
+
+        return RecipeRequest(
+            ingredients=ingredients,
+            available_ingredients=available_ingredients,
+            allergies=allergy,
+            dietary_preferences=diet,
+            pax=1,
+        )
 
     # Recieves input for diet
     def _collect_diet(self):
@@ -36,7 +44,7 @@ class RecipeRequestCollector:
                 .lower()
                 .strip()
             )
-            success = self.__validator.validate_diet(self, diet, self.dietlist)
+            success = self.__validator.validate_diet(diet, self.dietlist)
 
             if success:
                 self.user_diet = diet
@@ -61,7 +69,7 @@ class RecipeRequestCollector:
                 .lower()
                 .strip()
             )
-            success = self.__validator.validate_allergy(self, allergy, self.allergylist)
+            success = self.__validator.validate_allergy(allergy, self.allergylist)
 
             if success:
                 self.user_allergies.append(allergy)
@@ -74,15 +82,17 @@ class RecipeRequestCollector:
                 )
 
     # Recieves input for ingredients
-    def _collect_ingredients(self):
-        self.user_ingredients = []
+    def _collect_ingredients(self, available_ingredients: list[str] = None):
+        self.user_ingredients = {}
         while True:
             ingredient = input(
                 "Input ingredients and quantity, following this format E.g: apple 50g \n"
             )
-            success = self.__validator.validate_ingredients(self, ingredient)
+            success = self.__validator.validate_ingredients(
+                ingredient, available_ingredients
+            )
             if success:
-                self.user_ingredients.append(success)
+                self.user_ingredients.update(success)
             elif not success and ingredient == "done":
                 return self.user_ingredients
             else:

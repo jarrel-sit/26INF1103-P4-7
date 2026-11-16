@@ -23,7 +23,7 @@ class RecipeRequestValidator:
             return True
 
     # Validation for ingredients
-    def validate_ingredients(self, ingredient):
+    def validate_ingredients(self, ingredient, available_ingredients):
         pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)"
         match = re.match(pattern, ingredient)
         if match and re.search(r"[^\w\s]", ingredient) is None:
@@ -33,14 +33,30 @@ class RecipeRequestValidator:
                 and match.group(3) == "ml"
                 or match.group(3) == "g"
             ):
-                quantity = match.group(2) + match.group(3)
-                print(
-                    f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
-                )
-                ingredient = {name: quantity}
-                return ingredient
+                if self.validate_quantity(name, match.group(2), available_ingredients):
+                    quantity = match.group(2) + match.group(3)
+                    print(
+                        f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
+                    )
+                    ingredient = {name: quantity}
+
+                    return ingredient
 
             else:
                 print(
                     "Invalid item detected. Please ensure that ingredient entered follows the proper format."
                 )
+
+    def validate_quantity(self, ingredient, quantity, available_ingredients):
+        """Validates the quantity of the ingredient input by the user."""
+        if ingredient in available_ingredients:
+            available_quantity = available_ingredients[ingredient]
+            if quantity.isdigit() and int(quantity) <= int(
+                re.search(r"\d+", available_quantity).group()
+            ):
+                return True
+
+        print(
+            f"Invalid quantity for {ingredient.title()}. Please ensure the quantity is within available stock."
+        )
+        return False
