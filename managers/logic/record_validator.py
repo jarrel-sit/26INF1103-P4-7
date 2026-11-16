@@ -1,9 +1,8 @@
-# --- Imports --- #
 from .exceptions import InvalidRecordError
 from .recipe_record import RecipeRecord
 
+# RecordValidator ====
 
-# --- Classes --- #
 class RecordValidator:
     """Single job: turn the raw merged dict (user input + AI response) into a
     RecipeRecord, or raise InvalidRecordError explaining what is wrong.
