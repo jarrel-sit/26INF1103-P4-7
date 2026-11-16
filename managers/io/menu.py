@@ -25,12 +25,10 @@ class Menu(ABC):
                 self.choice = user_choice
                 return self.choice
             else:
-                self._displayer.display_error(
-                    self, "Invalid Option, please choose again"
-                )
+                self._displayer.display_error("Invalid Option, please choose again")
 
     def validate_choice(self, user_choice):
-        return self._validator.validate(user_choice, self.choices)
+        return self._validator.validate(choice=user_choice, option_count=self.choices)
 
     def execute(self):
         self.display_menu_text()
