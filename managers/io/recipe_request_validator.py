@@ -40,14 +40,18 @@ class RecipeRequestValidator:
                     success = self.validate_quantity(
                         name, match.group(2), match.group(3), available_ingredients
                     )
-                    if success:
-                        quantity = match.group(2) + match.group(3)
-                        print(
-                            f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
-                        )
-                        ingredient = {name: quantity}
 
-                        return ingredient
+                else:
+                    success = True # When adding new ingredients, we don't need to check against available ingredients
+
+                if success:
+                    quantity = match.group(2) + match.group(3)
+                    print(
+                        f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
+                    )
+                    ingredient = {name: quantity}
+
+                    return ingredient
 
             else:
                 print(
