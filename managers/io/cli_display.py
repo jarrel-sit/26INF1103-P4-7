@@ -1,12 +1,13 @@
 # --- Imports --- #
 from .display import Display
+from managers.logic import RoutingDecision
 
 
 # --- Classes --- #
 class CLIDisplay(Display):
     """Concrete implementation of the Display abstract base class for command-line interface (CLI) output."""
 
-    def display_logs(log: str):
+    def display_logs(self, log: str):
         """Outputs verbose log messages."""
         print(f"{log}")
 
@@ -26,20 +27,27 @@ class CLIDisplay(Display):
 
     # Displays recipe
     def display_result(self, result):
-        print("\n" + "=" * 55)
-        print(f"RECIPE: {result.get('recipe', 'N/A')}")
-        print(
-            f"OUTCOME: {result.get('outcome', 'N/A').upper()} (Score: {result.get('score', 0)})"
-        )
-        print(f"REASON: {result.get('reason', '')}")
+        if isinstance(result, RoutingDecision):
+            result = result.to_dict()
 
-        if result.get("outcome") == "reject":
+        recipe = result.get("recipe", "N/A")
+        outcome = result.get("outcome", "N/A")
+        score = result.get("score", 0)
+        reason = result.get("reason", "")
+        ingredients = result.get("ingredients", {})
+        instructions = result.get("instructions", {})
+
+        print("\n" + "=" * 55)
+        print(f"RECIPE: {recipe}")
+        print(f"OUTCOME: {outcome} (Score: {score})")
+        print(f"REASON: {reason}")
+
+        if outcome == "reject":
             print("!!! USE AT YOUR OWN RISK !!!")
 
         print("=" * 55)
 
         print("\n--- Ingredients Used ---")
-        ingredients = result.get("ingredients", {})
 
         for ingredient, quantity in ingredients.items():
             print(f" - {str(ingredient).capitalize()}: {quantity}")
