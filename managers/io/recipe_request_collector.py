@@ -1,20 +1,21 @@
 # --- Imports --- #
 from .recipe_request_validator import RecipeRequestValidator
-from .display_io import Display
+from .display import Display
 
 
 # Collects all the inputs needed for the recipe
 class RecipeRequestCollector:
     def __init__(
         self,
-        validator=RecipeRequestValidator,
+        validator: RecipeRequestValidator,
+        display: Display,
         dietlist=["vegetarian", "vegan", "pescetarian", "halal", "kosher"],
         allergylist=["milk", "soy", "fish", "peanuts", "nuts", "almonds", "eggs"],
     ):
         self.dietlist = dietlist
         self.allergylist = allergylist
         self.__validator = validator
-        self._display = Display
+        self._display = display
 
     # Consolidates diet,allergy and ingredients
     def collect_input(self):

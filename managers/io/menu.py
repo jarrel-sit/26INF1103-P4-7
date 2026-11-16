@@ -1,6 +1,6 @@
 # --- Imports --- #
 from abc import ABC, abstractmethod
-from .display_io import Display
+from .display import Display
 from .menu_validator import MenuValidator
 
 
@@ -8,10 +8,10 @@ from .menu_validator import MenuValidator
 class Menu(ABC):
     """Abstract base class for menu and its children classes"""
 
-    def __init__(self, choices):
+    def __init__(self, choices, validator: MenuValidator, displayer: Display):
         self.choices = choices
-        self._validator = MenuValidator
-        self._displayer = Display
+        self._validator = validator
+        self._displayer = displayer
 
     @abstractmethod
     def display_menu_text(self):
