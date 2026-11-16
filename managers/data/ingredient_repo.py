@@ -1,13 +1,11 @@
+# --- Imports --- #
+from abc import abstractmethod
+from .repository import Repository
 
-from abc import ABC, abstractmethod
 
-
-class IngredientRepository(ABC):
+# --- Classes --- #
+class IngredientRepository(Repository):
     """Contract for storing and loading the user's ingredients."""
-
-    @abstractmethod
-    def save_all(self, ingredients):
-        pass
 
     @abstractmethod
     def find_all(self):
