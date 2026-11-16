@@ -1,15 +1,16 @@
 # --- Imports --- #
 from .menu import Menu
+from .display import Display
+from .menu_validator import MenuValidator
 
 
 # --- Classes --- #
 class MainMenu(Menu):
-    def __init__(self):
-        super().__init__(choices=6)
+    def __init__(self, validator: MenuValidator, displayer: Display):
+        super().__init__(choices=6, validator=validator, displayer=displayer)
 
     def display_menu_text(self):
         self._displayer.display_menu(
-            self,
             """
 =================================
 |           Main Menu           |

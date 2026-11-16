@@ -1,11 +1,13 @@
 # --- Imports --- #
 from .menu import Menu
+from .display import Display
+from .menu_validator import MenuValidator
 
 
 # --- Classes --- #
 class SubMenu(Menu):
-    def __init__(self):
-        super().__init__(choices=4)
+    def __init__(self, validator: MenuValidator, displayer: Display):
+        super().__init__(choices=4, validator=validator, displayer=displayer)
 
     def display_menu_text(self):
         self._displayer.display_menu("""
