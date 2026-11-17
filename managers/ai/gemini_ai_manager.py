@@ -78,7 +78,7 @@ class GeminiAIManager(BaseAIManager):
         as well. Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
         online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
         utensils needed, and time taken for each step of the recipe. Include how much of each ingredient is used 
-        in each step while describing the step. If at any pointthere are not enough ingredients to make a legitimate recipe, like for example once some ingredients are removed due to dietary preferences/allergies, then  
+        in each step while describing the step. If at any point there are not enough ingredients to make a legitimate recipe, like for example once some ingredients are removed due to dietary preferences/allergies, then  
         indicate true in the JSON file, otherwise indicate false. Remove any hazardous or inedible ingredients. 
         and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
         from 0 to 1 for evaluating it's usability. 
