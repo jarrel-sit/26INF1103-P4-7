@@ -20,7 +20,7 @@ class RecipeRequestValidator:
         #     log = f"No dietary restrictions, we will take that into consideration."
         #     self._display.display_logs(log)
         #     return True
-        elif diet not in dietlist and diet != 'none':
+        elif diet not in dietlist and diet != 'done':
             log = f"We do not recognise this diet type. Ensure you typed it in correctly."
             self._display.display_error(log)
             return False

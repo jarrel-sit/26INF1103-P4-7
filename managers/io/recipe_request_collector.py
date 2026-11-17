@@ -35,29 +35,25 @@ class RecipeRequestCollector:
 
     # Recieves input for diet
     def _collect_diet(self):
-        self.user_diet = None
+        self.user_diet = []
         self._display.display_logs("\nList of known diets")
         for i in self.dietlist:
             self._display.display_logs(f"- {i.capitalize()}")
         while True:
             diet = (
                 input(
-                    "\nDo you have any of these dietary restrictions? Input none if not applicable: \n"
+                    "\nDo you have any of these dietary restrictions? Input done when there are no more diets to input: \n"
                 )
                 .lower()
                 .strip()
             )
             success = self.__validator.validate_diet(diet, self.dietlist)
 
-            if success and diet != "none":
-                self.user_diet = diet
-                print(self.user_diet)
+            if diet == "done":
                 return self.user_diet
-            elif diet == "none":
-                self.user_diet = None
-                return self.user_diet
-            else:
-                continue
+
+            elif success:
+                self.user_diet.append(diet)
         
 
     # Recieves input for allergy
