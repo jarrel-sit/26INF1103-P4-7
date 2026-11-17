@@ -1,5 +1,5 @@
 # --- Imports --- #
-import time, json
+import time, json, re
 from models import RecipeRequest, AIResult, GeneratedRecipe, Instruction
 from .base_ai_manager import BaseAIManager
 from .gemini_client import GeminiClient
@@ -24,6 +24,11 @@ class GeminiAIManager(BaseAIManager):
             "equipment": "list",
             "insufficient_ingredients": "bool",
         }
+
+        self._FENCE_PATTERN = re.compile(
+            r"```(?:json)?\s*(\{.*\})\s*```",
+            re.DOTALL | re.IGNORECASE,
+        )
 
     def process(self, request: RecipeRequest) -> AIResult:
         prompt = self._build_prompt(request)
@@ -110,6 +115,22 @@ class GeminiAIManager(BaseAIManager):
                 # Catches network drops or client-side issues outside the stream loop
                 return f"Transport or connection exception: {e}"
 
+    def _extract_json_text(self, raw: str) -> str:
+        cleaned = raw.strip()
+
+        # Extract from ```json ... ``` or ``` ... ``` (case-insensitive)
+        fence_match = self._FENCE_PATTERN.search(cleaned)
+        if fence_match:
+            return fence_match.group(1).strip()
+
+        # Fallback: extract from first '{' to last '}' if extra text surrounds JSON
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            return cleaned[start : end + 1]
+
+        return cleaned
+
     def _parse_response(self, raw: str) -> GeneratedRecipe | str:
         """
         Function to parse the response from the API.
@@ -117,17 +138,11 @@ class GeminiAIManager(BaseAIManager):
         if not raw:
             return "No response received from the API."
 
-        # Check for markdown formatting issues in the response, and fix them if necessary
-        if raw.startswith("```") or raw.endswith("```"):
-            raw = raw.strip("```").strip()
-
-        # Remove `json` header to parse
-        if raw.startswith("json"):
-            raw = raw[4:]
+        json_text = self._extract_json_text(raw)
 
         # Parse the response as JSON and handle any parsing errors
         try:
-            response = json.loads(raw)
+            response = json.loads(json_text)
             instructions_dict = {
                 key: Instruction(**value)
                 for key, value in response.get("instructions", {}).items()
