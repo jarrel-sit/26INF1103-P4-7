@@ -29,12 +29,12 @@ class GeneratedRecipe:
             for key, value in data.get("instructions", {}).items()
         }
         return cls(
-            recipe=data["recipe"],
-            ingredients=data["ingredients"],
+            recipe=data.get("recipe"),
+            ingredients=data.get("ingredients"),
             instructions=instructions_dict,
-            confidence=data["confidence"],
-            dietary_preferences=data["dietary_preferences"],
-            hazardous_ingredients=data["hazardous_ingredients"],
-            equipment=data["equipment"],
-            insufficient_ingredients=data["insufficient_ingredients"],
+            confidence=data.get("confidence"),
+            dietary_preferences=data.get("dietary_preferences"),
+            hazardous_ingredients=data.get("hazardous_ingredients"),
+            equipment=data.get("equipment"),
+            insufficient_ingredients=data.get("insufficient_ingredients"),
         )
