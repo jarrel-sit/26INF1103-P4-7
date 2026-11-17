@@ -3,6 +3,7 @@ from .recipe_request_validator import RecipeRequestValidator
 from .display import Display
 from models import RecipeRequest
 
+
 # Collects all the inputs needed for the recipe
 class RecipeRequestCollector:
     def __init__(
@@ -18,12 +19,17 @@ class RecipeRequestCollector:
         self._display = display
 
     # Consolidates diet,allergy and ingredients
-    def collect_input(self, available_ingredients: list[str] = None) -> list | None:
+    def collect_input(
+        self, available_ingredients: list[str] = None
+    ) -> RecipeRequest | None:
         diet = self._collect_diet()
         allergy = self._collect_allergy()
 
         self._display.display_ingredients(available_ingredients)
         ingredients = self.collect_ingredients(available_ingredients)
+
+        if not ingredients:
+            return None  # User chose to cancel or didn't provide any ingredients
 
         return RecipeRequest(
             ingredients=ingredients,
@@ -54,7 +60,6 @@ class RecipeRequestCollector:
 
             elif success:
                 self.user_diet.append(diet)
-        
 
     # Recieves input for allergy
     def _collect_allergy(self):
@@ -62,7 +67,7 @@ class RecipeRequestCollector:
         self._display.display_logs("\nList of known allergies")
         for i in self.allergylist:
             self._display.display_logs(f"- {i.capitalize()}")
-        
+
         while True:
             allergy = (
                 input(
@@ -75,21 +80,22 @@ class RecipeRequestCollector:
 
             if allergy == "done":
                 return self.user_allergies
-                
+
             elif success:
                 self.user_allergies.append(allergy)
-                
-            
 
     # Recieves input for ingredients
     def collect_ingredients(self, available_ingredients: list[str] = None):
         self.user_ingredients = {}
         while True:
-            ingredient = input(
-                "Input ingredients and quantity, following this format E.g: apple 50g \n"
-            ).lower().strip()
-            
-            
+            ingredient = (
+                input(
+                    "Input ingredients and quantity, following this format E.g: apple 50g \n"
+                )
+                .lower()
+                .strip()
+            )
+
             success = self.__validator.validate_ingredients(
                 ingredient, available_ingredients
             )
