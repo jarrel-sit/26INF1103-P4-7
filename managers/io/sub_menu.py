@@ -27,11 +27,11 @@ class SubMenu(Menu):
             self._displayer.display_error("No used ingredients found in past recipes.")
             return None
 
-        print("\nFilter Past Recipes by Ingredient:")
+        self._displayer.display_logs("\nFilter Past Recipes by Ingredient:")
         for idx, name in enumerate(used_ingredients, start=1):
-            print(f"  {idx}. {name}")
+            self._displayer.display_logs(f"  {idx}. {name}")
 
-        print("  0. Cancel")
+        self._displayer.display_logs("  0. Cancel")
 
         while True:
             raw_choice = input("Select an ingredient number: ").strip()
@@ -44,7 +44,7 @@ class SubMenu(Menu):
                 if 0 <= index < len(used_ingredients):
                     return used_ingredients[index]
 
-            print(
+            self._displayer.display_error(
                 f"Invalid selection. Enter a number between 0 and {len(used_ingredients)}."
             )
 
@@ -64,6 +64,6 @@ class SubMenu(Menu):
             if self._validator.validate(choice=choice, option_count=len(recipes)):
                 return recipes[int(choice) - 1]
 
-            self._displayer.display_logs(
+            self._displayer.display_error(
                 f"Invalid selection. Enter a number between 0 and {len(recipes)}."
             )
