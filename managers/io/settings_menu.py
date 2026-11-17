@@ -1,5 +1,5 @@
 from managers.logic.logic_settings import LogicSettings
-from .cli_display import CLIDisplay
+from .display import Display
 from .menu import Menu
 from .menu_validator import MenuValidator
 
@@ -7,7 +7,7 @@ from .menu_validator import MenuValidator
 class SettingsMenu(Menu):
     """Submenu for viewing and configuring LogicManager settings."""
 
-    def __init__(self, validator: MenuValidator, displayer: CLIDisplay) -> None:
+    def __init__(self, validator: MenuValidator, displayer: Display) -> None:
         super().__init__(validator=validator, displayer=displayer, choices=5)
 
     def display_menu_text(self) -> None:
