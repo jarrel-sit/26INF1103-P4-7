@@ -8,19 +8,31 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
     def __init__(self, filepath, fieldnames, logger=None):
         super().__init__(filepath, fieldnames, mode="a", logger=logger)
 
-    def save(self, recipe):
+    def save(self, recipe: RoutingDecision | dict) -> bool:
         """Appends one evaluated recipe. Returns True if the save succeeded."""
-        if not recipe or not isinstance(recipe, dict):
+
+        if not recipe or not isinstance(recipe, (RoutingDecision, dict)):
             return False
 
-        row = {
-            "recipe": recipe.get("recipe", "Unknown Recipe"),
-            "outcome": recipe.get("outcome", "unknown"),
-            "score": recipe.get("score", 0.0),
-            "reason": recipe.get("reason", ""),
-            "ingredients": json.dumps(recipe.get("ingredients", [])),
-            "instructions": json.dumps(recipe.get("instructions", [])),
-        }
+        if isinstance(recipe, RoutingDecision):
+            row = {
+                "recipe": recipe.recipe,
+                "outcome": recipe.outcome.value,
+                "score": recipe.score,
+                "reason": recipe.reason,
+                "ingredients": json.dumps(recipe.ingredients),
+                "instructions": json.dumps(recipe.instructions),
+            }
+
+        else:
+            row = {
+                "recipe": recipe.get("recipe", "Unknown Recipe"),
+                "outcome": recipe.get("outcome", "unknown"),
+                "score": recipe.get("score", 0.0),
+                "reason": recipe.get("reason", ""),
+                "ingredients": json.dumps(recipe.get("ingredients", [])),
+                "instructions": json.dumps(recipe.get("instructions", [])),
+            }
 
         return super().save(row)
 
