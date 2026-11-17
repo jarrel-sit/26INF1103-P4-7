@@ -36,15 +36,7 @@ class LogicSettings:
     ) -> None:
         """Validates and updates scoring weights (non-negative and summing to 1.0)."""
 
-        raw_weights = (confidence_weight, ingredients_weight, time_weight)
-        if any(
-            isinstance(w, bool) or not isinstance(w, (int, float)) for w in raw_weights
-        ):
-            raise ValueError("All scoring weights must be numeric.")
-        if any(w < 0.0 for w in raw_weights):
-            raise ValueError("Scoring weights cannot be negative.")
-        if abs(sum(raw_weights) - 1.0) > 1e-6:
-            raise ValueError("Scoring weights must sum to 1.0.")
+        self.__validate_weights(confidence_weight, ingredients_weight, time_weight)
 
         self._confidence_weight = float(confidence_weight)
         self._ingredients_weight = float(ingredients_weight)
@@ -63,3 +55,17 @@ class LogicSettings:
             ingredients=self._ingredients_weight,
             time=self._time_weight,
         )
+
+    @staticmethod
+    def __validate_weights(
+        confidence_weight: float, ingredients_weight: float, time_weight: float
+    ) -> None:
+        raw_weights = (confidence_weight, ingredients_weight, time_weight)
+        if any(
+            isinstance(w, bool) or not isinstance(w, (int, float)) for w in raw_weights
+        ):
+            raise ValueError("All scoring weights must be numeric.")
+        if any(w < 0.0 for w in raw_weights):
+            raise ValueError("Scoring weights cannot be negative.")
+        if abs(sum(raw_weights) - 1.0) > 1e-6:
+            raise ValueError("Scoring weights must sum to 1.0.")
