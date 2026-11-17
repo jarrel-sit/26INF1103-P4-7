@@ -1,4 +1,5 @@
 # --- Imports --- #
+import math
 from .weighted_scorer import WeightedScorer
 
 
@@ -69,3 +70,5 @@ class LogicSettings:
             raise ValueError("Scoring weights cannot be negative.")
         if abs(sum(raw_weights) - 1.0) > 1e-6:
             raise ValueError("Scoring weights must sum to 1.0.")
+        if any(not math.isfinite(w) for w in raw_weights):
+            raise ValueError("Scoring weights must be finite numbers.")
