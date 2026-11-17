@@ -22,7 +22,7 @@ class GeminiClient(AIClient):
         for event in interaction:
             # Check for error events
             if hasattr(event, "error") and event.error:
-                return f"API Error ({event.error.code}): {event.error.message}"
+                raise Exception(f"API Error ({event.error.code}): {event.error.message}")
 
             # Check if the event contains text delta chunks (successful responses)
             if (
