@@ -144,5 +144,5 @@ class GeminiAIManager(BaseAIManager):
                 ),
             )
 
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, TypeError, AttributeError) as e:
             return f"JSON parsing error: {e} \nResponse content: {raw}"
