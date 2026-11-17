@@ -46,14 +46,15 @@ class RecipeRequestCollector:
             )
             success = self.__validator.validate_diet(diet, self.dietlist)
 
-            if success:
+            if success and diet != "none":
                 self.user_diet = diet
                 return self.user_diet
-            elif not success and diet == "none":
+            elif success and diet == "none":
                 self.user_diet = None
+                return self.user_diet
             else:
                 continue
-            return
+        
 
     # Recieves input for allergy
     def _collect_allergy(self):
@@ -68,11 +69,13 @@ class RecipeRequestCollector:
             )
             success = self.__validator.validate_allergy(allergy, self.allergylist)
 
-            if success:
-                self.user_allergies.append(allergy)
+            if success and allergy == "done":
                 print(self.user_allergies)
-            elif not success and allergy == "done":
                 return self.user_allergies
+                
+            elif success and allergy == "done":
+                self.user_allergies.append(allergy)
+                
             
 
     # Recieves input for ingredients

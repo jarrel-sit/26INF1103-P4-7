@@ -16,14 +16,23 @@ class RecipeRequestValidator:
             self._display.display_logs(f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions.")
                 #f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
             return True
+        elif diet not in dietlist and diet == "none":
+            log = f"No dietary restrictions, we will take that into consideration."
+            self._display.display_logs(log)
+            return True
         else:
             log = f"We do not recognise this diet type. Ensure you typed it in correctly."
             self._display.display_error(log)
+            return False
 
     # Validation for allergy
     def validate_allergy(self, allergy, allergylist):
         if allergy in allergylist:
             log =  f"Taken note of {allergy} allergy, we will not include {allergy} in your generated recipes"
+            self._display.display_logs(log)
+            return True
+        elif allergy not in allergylist and allergy == "done":
+            log = f"No food allergies, we will take that into consideration."
             self._display.display_logs(log)
             return True
         else:
@@ -57,9 +66,9 @@ class RecipeRequestValidator:
 
                     return ingredient
 
-        else:
-            log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
-            self._display.display_error(log)
+            else:
+                log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
+                self._display.display_error(log)
 
     def validate_quantity(self, ingredient, quantity, unit, available_ingredients):
         """Validates the quantity of the ingredient input by the user."""
