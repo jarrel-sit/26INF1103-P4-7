@@ -2,12 +2,16 @@
 # Unit tests for the OOP Logic Manager. They run with no live AI API: every
 # "AI response" below is a hardcoded sample record.
 import copy
+import importlib
 import inspect
+import pkgutil
 
 import pytest
 
-import logic_manager
-from logic_manager import (
+from models import EvaluationResult, GeneratedRecipe, Instruction, RecipeRequest, RuleResult
+
+import managers.logic
+from managers.logic import (
     AIConfidenceRule,
     AllergyRule,
     BaseRule,
@@ -21,12 +25,13 @@ from logic_manager import (
     LogicManager,
     LogicManagerError,
     Outcome,
+    OutcomeRouter,
     Quantity,
     RecipeRecord,
     RecordValidator,
     RoutingDecision,
     RuleEvaluator,
-    RuleResult,
+    RuleFinding,
     ScoringWeights,
     Severity,
     WeightedScorer,
@@ -326,7 +331,8 @@ def test_route_batch_isolates_a_malformed_record(manager):
         ({"confidence": float("nan")}, "confidence"),
         ({"allergies": "peanuts"}, "allergies"),
         ({"allergies": [1, 2]}, "allergies"),
-        ({"dietary_preferences": "vegan"}, "dietary_preferences"),
+        ({"dietary_preferences": 5}, "dietary_preferences"),
+        ({"dietary_preferences": ["vegan", 1]}, "dietary_preferences"),
         ({"available_ingredients": None}, "available_ingredients"),
         ({"ingredients_used": "rice"}, "ingredients_used"),
         ({"max_cooking_time_minutes": "30"}, "max_cooking_time_minutes"),
@@ -419,9 +425,9 @@ def test_quantity_comparison_helpers():
 def test_abstract_classes_and_interfaces_cannot_be_instantiated():
     for abstract in (IRule, IScorer):
         with pytest.raises(TypeError):
-            abstract()
+            abstract()                    # type: ignore
     with pytest.raises(TypeError):
-        BaseRule("x", Severity.ADVISORY)  # _check / failure_reason still abstract
+        BaseRule("x", Severity.ADVISORY)  # type: ignore  # _check / failure_reason still abstract
 
 
 def test_default_rules_inherit_from_base_rule_and_implement_the_interface():
@@ -453,7 +459,7 @@ def test_encapsulation_manager_internals_are_private(manager):
 
 def test_composition_evaluation_owns_its_rule_results(manager):
     evaluation = manager.evaluate(make_record())
-    assert all(isinstance(result, RuleResult) for result in evaluation.results)
+    assert all(isinstance(result, RuleFinding) for result in evaluation.results)
     assert evaluation.result_for("cooking_time").passed
     with pytest.raises(KeyError):
         evaluation.result_for("no_such_rule")
@@ -494,8 +500,11 @@ def test_rule_evaluator_needs_rules_and_unique_names():
 
 def test_logic_manager_does_no_console_io():
     """Phase 1 constraint still holds: print()/input() live only in io_manager."""
-    source = inspect.getsource(logic_manager)
-    assert "print(" not in source and "input(" not in source
+    for module in pkgutil.iter_modules(managers.logic.__path__):
+        source = inspect.getsource(
+            importlib.import_module(f"managers.logic.{module.name}")
+        )
+        assert "print(" not in source and "input(" not in source, module.name
 
 
 # ==========================================
@@ -517,7 +526,7 @@ def test_lsp_every_rule_honours_the_irule_contract(rule, raw):
 
     result = rule.evaluate(record)
 
-    assert isinstance(result, RuleResult)
+    assert isinstance(result, RuleFinding)
     assert isinstance(result.passed, bool)
     assert result.rule_name == rule.name
     assert isinstance(rule.severity, Severity)
@@ -595,11 +604,11 @@ def test_srp_router_only_decides_from_an_existing_evaluation(typed_record):
     stub = Evaluation(
         "Stub",
         [
-            RuleResult("a", False, {}, Severity.ADVISORY, "advisory problem"),
-            RuleResult("b", True, {}, Severity.BLOCKING, "never used"),
+            RuleFinding("a", False, {}, Severity.ADVISORY, "advisory problem"),
+            RuleFinding("b", True, {}, Severity.BLOCKING, "never used"),
         ],
     )
-    decision = logic_manager.OutcomeRouter().decide(typed_record, stub, 12.5)
+    decision = OutcomeRouter().decide(typed_record, stub, 12.5)
     assert isinstance(decision, RoutingDecision)
     assert (decision.outcome, decision.reason, decision.score) == (
         Outcome.FLAG, "advisory problem", 12.5,
@@ -608,3 +617,146 @@ def test_srp_router_only_decides_from_an_existing_evaluation(typed_record):
 
 def test_srp_scorer_is_independent_of_the_rules(typed_record):
     assert WeightedScorer().score(typed_record) == 97.5
+
+
+# ==========================================
+# 8. ALIGNMENT WITH THE TEAM'S MODELS
+# ==========================================
+def make_request(**overrides):
+    fields = {
+        "ingredients": {"chicken": "200g", "rice": "150g"},
+        "available_ingredients": {"chicken": "300g", "rice": "200g"},
+        "allergies": [],
+        "dietary_preferences": [],
+        "pax": 1,
+    }
+    fields.update(overrides)
+    return RecipeRequest(**fields)
+
+
+def make_generated(**overrides):
+    fields = {
+        "recipe": "Chicken Rice",
+        "ingredients": {"chicken": "200g", "rice": "150g"},
+        "instructions": {"1": Instruction(step="Cook everything", time_taken="20 min")},
+        "confidence": 0.9,
+        "dietary_preferences": [],
+        "equipment": ["pot"],
+        "hazardous_ingredients": {},
+        "insufficient_ingredients": False,
+    }
+    fields.update(overrides)
+    return GeneratedRecipe(**fields)
+
+
+def test_process_takes_the_team_models_and_returns_a_decision(manager):
+    decision = manager.process(make_request(), make_generated())
+    assert isinstance(decision, RoutingDecision)
+    assert decision.outcome is Outcome.ACCEPT
+    assert decision.recipe == "Chicken Rice"
+
+
+def test_process_matches_route_on_the_phase_1_merged_dict(manager):
+    """process() must give the same answer main.py used to get from
+    route({**user_input, **response})."""
+    request, generated = make_request(allergies=["rice"]), make_generated()
+    merged = {
+        "ingredients": request.ingredients,
+        "available_ingredients": request.available_ingredients,
+        "allergies": request.allergies,
+        "dietary_preferences": request.dietary_preferences,
+        **generated.recipe_to_dict(),
+    }
+    assert manager.process(request, generated).to_dict() == manager.route(merged).to_dict()
+
+
+def test_process_result_dict_is_what_data_and_io_managers_read(manager):
+    result = manager.process(make_request(), make_generated()).to_dict()
+    assert result["outcome"] == "accept"
+    assert result["instructions"] == {"1": {"step": "Cook everything", "time_taken": "20 min"}}
+
+
+def test_process_rejects_an_allergy_conflict(manager):
+    decision = manager.process(make_request(allergies=["chicken"]), make_generated())
+    assert decision.outcome is Outcome.REJECT
+    assert decision.reason == "allergy conflict"
+
+
+def test_process_accepts_the_text_diet_io_manager_returns(manager):
+    # io_manager.diet() returns "" or "vegan" (text), not a list. The AI normally
+    # replaces it, but if the AI leaves it out the text must not crash the rules.
+    request = make_request(dietary_preferences="vegan")
+    record = make_generated().recipe_to_dict()
+    del record["dietary_preferences"]
+    merged = {
+        "ingredients": request.ingredients,
+        "available_ingredients": request.available_ingredients,
+        "dietary_preferences": request.dietary_preferences,
+        **record,
+    }
+    assert manager.route(merged).outcome is Outcome.ACCEPT
+    assert manager.route(make_record(dietary_preferences="")).outcome is Outcome.ACCEPT
+    # text is read as one preference: a diet named like an ingredient still flags
+    flagged = manager.route(make_record(ingredients={"vegan": "1g"}, dietary_preferences="vegan"))
+    assert flagged.outcome is Outcome.FLAG
+
+
+def test_process_raises_invalid_record_error_for_a_bad_ai_recipe(manager):
+    with pytest.raises(InvalidRecordError):
+        manager.process(make_request(), make_generated(confidence=7))
+
+
+def test_decision_converts_to_the_team_evaluation_result(manager):
+    decision = manager.route(
+        make_record(ingredients={"peanuts": "50g"}, available_ingredients={"peanuts": "50g"}, allergies=["peanuts"])
+    )
+    result = decision.to_evaluation_result()
+    assert isinstance(result, EvaluationResult)
+    assert (result.outcome, result.reason) == ("reject", "allergy conflict")
+    assert result.score == decision.score
+    assert [r.rule_name for r in result.rule_results] == [
+        "ingredient_availability", "allergy_restrictions",
+        "dietary_restrictions", "cooking_time", "ai_confidence",
+    ]
+    assert all(isinstance(r, RuleResult) for r in result.rule_results)
+
+
+def test_failed_rule_details_explain_the_failure(manager):
+    result = manager.route(make_record(allergies=["rice"])).to_evaluation_result()
+    allergy = next(r for r in result.rule_results if r.rule_name == "allergy_restrictions")
+    assert allergy.passed is False
+    assert allergy.details == "allergy conflict (conflicting_allergens=['rice'])"
+    cooking = next(r for r in result.rule_results if r.rule_name == "cooking_time")
+    assert cooking.passed and cooking.details == "estimated_minutes=30, max_minutes=45"
+
+
+def test_invalid_record_decision_converts_with_no_rule_results():
+    ranked = LogicManager().route_batch([make_record(confidence="bad")])
+    assert ranked[0].to_evaluation_result().rule_results == []
+    assert ranked[0].to_evaluation_result().outcome == "reject"
+
+
+def test_internal_and_team_rule_result_classes_are_different_types():
+    assert RuleFinding is not RuleResult
+
+
+def test_process_lets_the_ai_fields_override_the_users_like_phase_1(manager):
+    # Phase 1 merged {**user_input, **ai_response}: the AI's ingredients and
+    # dietary preferences replace the user's picks, so the user's allergy is
+    # checked against what the AI actually used.
+    request = make_request(
+        ingredients={"chicken": "200g"}, allergies=["chicken"], dietary_preferences="vegan"
+    )
+    generated = make_generated(ingredients={"rice": "150g"}, dietary_preferences=[])
+
+    decision = manager.process(request, generated)
+
+    assert decision.to_dict()["ingredients"] == {"rice": "150g"}
+    assert decision.outcome is Outcome.ACCEPT  # no chicken in the AI's recipe
+
+
+def test_text_diet_is_turned_into_a_clean_list():
+    validate = RecordValidator().validate
+    assert validate(make_record(dietary_preferences="")).dietary_preferences == []
+    assert validate(make_record(dietary_preferences="   ")).dietary_preferences == []
+    assert validate(make_record(dietary_preferences=" vegan ")).dietary_preferences == ["vegan"]
