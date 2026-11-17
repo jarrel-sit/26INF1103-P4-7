@@ -2,6 +2,7 @@
 from .menu import Menu
 from .display import Display
 from .menu_validator import MenuValidator
+from managers.logic import RoutingDecision
 
 
 # --- Classes --- #
@@ -47,7 +48,7 @@ class SubMenu(Menu):
                 f"Invalid selection. Enter a number between 0 and {len(used_ingredients)}."
             )
 
-    def select_recipe(self, recipes: list[dict]) -> dict | None:
+    def select_recipe(self, recipes: list[RoutingDecision]) -> RoutingDecision | None:
         """Prompts the user to pick a recipe from a displayed list."""
         if not recipes:
             return None

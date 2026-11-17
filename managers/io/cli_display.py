@@ -26,16 +26,17 @@ class CLIDisplay(Display):
             print(f"- {key}: {value}")
 
     # Displays recipe
-    def display_result(self, result):
-        if isinstance(result, RoutingDecision):
-            result = result.to_dict()
+    def display_result(self, result: RoutingDecision):
+        data = (
+            result.to_dict()
+        )  # Convert RoutingDecision to a dictionary for easier access
 
-        recipe = result.get("recipe", "N/A")
-        outcome = result.get("outcome", "N/A")
-        score = result.get("score", 0)
-        reason = result.get("reason", "")
-        ingredients = result.get("ingredients", {})
-        instructions = result.get("instructions", {})
+        recipe = data.get("recipe", "N/A")
+        outcome = data.get("outcome", "N/A")
+        score = data.get("score", 0)
+        reason = data.get("reason", "")
+        ingredients = data.get("ingredients", {})
+        instructions = data.get("instructions", {})
 
         print("\n" + "=" * 55)
         print(f"RECIPE: {recipe}")
@@ -54,8 +55,6 @@ class CLIDisplay(Display):
 
         print("\n--- Instructions ---")
 
-        instructions = result.get("instructions")
-
         # Sort keys to ensure that the steps are in numerical order
         for step_num, step_data in sorted(
             instructions.items(), key=lambda x: str(x[0])
@@ -71,15 +70,18 @@ class CLIDisplay(Display):
     def display_menu(self, message):
         print(message)
 
-    def display_recipe_list(self, recipes):
+    def display_recipe_list(self, recipes: list[RoutingDecision]):
         if not recipes:
             print("No recipes found.")
             return
 
         print("\n--- Past Recipes ---")
         for idx, recipe in enumerate(recipes, start=1):
+            recipe_data = (
+                recipe.to_dict()
+            )  # Convert RoutingDecision to a dictionary for easier access
             print(
-                f"{idx}. {recipe.get('recipe', 'N/A')} - Outcome: {recipe.get('outcome', 'N/A').upper()} (Score: {recipe.get('score', 0)})"
+                f"{idx}. {recipe_data.get('recipe', 'N/A')} - Outcome: {recipe_data.get('outcome', 'N/A').upper()} (Score: {recipe_data.get('score', 0)})"
             )
 
     def display_used_ingredients(self, used_ingredients: list[str]) -> None:

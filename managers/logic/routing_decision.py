@@ -43,6 +43,10 @@ class RoutingDecision:
         return self.__score
 
     @property
+    def ingredients(self) -> dict:
+        return dict(self.__ingredients)
+
+    @property
     def evaluation(self) -> Optional[Evaluation]:
         return self.__evaluation
 
