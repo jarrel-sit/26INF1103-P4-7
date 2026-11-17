@@ -7,7 +7,7 @@ class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
     def __init__(self):
-        self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)"
+        self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)$"
         self.quantity_pattern = r"(\d+)\s*(g|ml)"
 
     # Validation for diet

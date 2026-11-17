@@ -48,15 +48,15 @@ class RecipeRequestCollector:
 
             if success:
                 self.user_diet = diet
-                return
+                return self.user_diet
             elif not success and diet == "none":
-                self.user_diet = "none"
+                self.user_diet = diet
                 return self.user_diet
             else:
                 self._display.display_error(
                     "We do not recognise this diet type. Ensure you typed it in correctly."
                 )
-            print(self.user_diet)
+            return
 
     # Recieves input for allergy
     def _collect_allergy(self):
@@ -87,7 +87,9 @@ class RecipeRequestCollector:
         while True:
             ingredient = input(
                 "Input ingredients and quantity, following this format E.g: apple 50g \n"
-            )
+            ).lower().strip()
+            
+            
             success = self.__validator.validate_ingredients(
                 ingredient, available_ingredients
             )
