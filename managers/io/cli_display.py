@@ -88,4 +88,4 @@ class CLIDisplay(Display):
         print("\nFilter Past Recipes by Ingredient:")
         for idx, name in enumerate(used_ingredients, start=1):
             print(f"  {idx}. {name}")
-        print("  0. Cancel")
+        print(f"  {idx+1}. Cancel")

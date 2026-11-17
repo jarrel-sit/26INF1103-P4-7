@@ -31,39 +31,42 @@ class SubMenu(Menu):
         for idx, name in enumerate(used_ingredients, start=1):
             self._displayer.display_logs(f"  {idx}. {name}")
 
-        self._displayer.display_logs("  0. Cancel")
+        self._displayer.display_logs(f"  {idx+1}. Cancel")
 
-        while True:
-            raw_choice = self.get_choice()
+        # Temporarily match choices to the dynamic list length
+        original_choices = self.choices
+        self.choices = len(used_ingredients) + 1  # +1 for the cancel option
 
-            if raw_choice == "0":
-                return None
+        choice = self.get_choice()
 
-            if raw_choice.isdecimal():
-                index = int(raw_choice) - 1
-                if 0 <= index < len(used_ingredients):
-                    return used_ingredients[index]
+        if choice == str(self.choices):  # Cancel option
+            output = None
 
-            self._displayer.display_error(
-                f"Invalid selection. Enter a number between 0 and {len(used_ingredients)}."
-            )
+        else:
+            output = used_ingredients[int(choice) - 1]
+
+        self.choices = original_choices  # Restore original choices
+        return output
 
     def select_recipe(self, recipes: list[RoutingDecision]) -> RoutingDecision | None:
         """Prompts the user to pick a recipe from a displayed list."""
         if not recipes:
             return None
 
-        while True:
-            choice = input(
-                f"Enter recipe number to view details (1-{len(recipes)}, or 0 to cancel): "
-            ).strip()
+        self._displayer.display_logs(
+            f"Enter recipe number to view details (1-{len(recipes)}, or {len(recipes)+1} to cancel): "
+        )
 
-            if choice == "0":
-                return None
+        original_choices = self.choices
+        self.choices = len(recipes) + 1  # +1 for the cancel option
 
-            if self._validator.validate(choice=choice, option_count=len(recipes)):
-                return recipes[int(choice) - 1]
+        choice = self.get_choice()
 
-            self._displayer.display_error(
-                f"Invalid selection. Enter a number between 0 and {len(recipes)}."
-            )
+        if choice == str(self.choices):  # Cancel option
+            output = None
+
+        else:
+            output = recipes[int(choice) - 1]
+
+        self.choices = original_choices  # Restore original choices
+        return output
