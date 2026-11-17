@@ -5,7 +5,29 @@ from models import GeneratedRecipe, Instruction, ValidationResult
 
 # --- Classes --- #
 class RecipeValidator:
-    def validate(self, response: GeneratedRecipe) -> ValidationResult:
+    def validate_raw(self, data: dict) -> ValidationResult:
+        """Validate parsed JSON structure and construct a GeneratedRecipe."""
+        errors: list[str] = []
+
+        if not isinstance(data, dict):
+            errors.append(
+                f"Schema error: expected JSON object, got {type(data).__name__}."
+            )
+
+        raw_instructions = data.get("instructions")
+        if not isinstance(raw_instructions, dict):
+            errors.append("Schema error: 'instructions' must be a JSON object.")
+
+        for key, value in raw_instructions.items():
+            if not isinstance(value, dict):
+                errors.append(
+                    f"Schema error: instruction '{key}' must be an object, got {type(value).__name__}."
+                )
+                break  # Stop processing further if the structure is invalid
+
+        return ValidationResult(is_valid=len(errors) == 0, errors=errors)
+
+    def validate_fields(self, response: GeneratedRecipe) -> ValidationResult:
         errors: list[str] = []
 
         if not isinstance(response.recipe, str) or not response.recipe.strip():

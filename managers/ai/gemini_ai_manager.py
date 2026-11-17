@@ -33,18 +33,28 @@ class GeminiAIManager(BaseAIManager):
     def process(self, request: RecipeRequest) -> AIResult:
         prompt = self._build_prompt(request)
         raw_response = self.call_api(prompt)
-        recipe = self._parse_response(raw_response)
+        parsed = self._parse_response(raw_response)
+
+        if isinstance(parsed, str):
+            return AIResult(success=False, error_message=parsed)
+
+        parsed_validation = self._validator.validate_raw(parsed)
+
+        if not parsed_validation.is_valid:
+            return AIResult(
+                success=False, error_message=", ".join(parsed_validation.errors)
+            )
+
+        recipe = GeneratedRecipe.from_dict(parsed)
 
         if isinstance(recipe, GeneratedRecipe):
-            validation = self._validator.validate(recipe)
+            validation = self._validator.validate_fields(recipe)
             if validation.is_valid:
                 return AIResult(success=True, recipe=recipe)
             else:
                 return AIResult(
                     success=False, error_message=", ".join(validation.errors)
                 )
-
-        return AIResult(success=False, error_message=recipe)
 
     def _build_prompt(self, request: RecipeRequest) -> str:
         """
@@ -125,13 +135,19 @@ class GeminiAIManager(BaseAIManager):
 
         # Fallback: extract from first '{' to last '}' if extra text surrounds JSON
         start = cleaned.find("{")
-        end = cleaned.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            return cleaned[start : end + 1]
+        if start != -1:
+            try:
+                _, end_idx = json.JSONDecoder().raw_decode(cleaned, start)
+                return cleaned[start:end_idx]
+            except json.JSONDecodeError:
+                # Fall back to outer braces so _parse_response reports the exact syntax error
+                end = cleaned.rfind("}")
+                if end > start:
+                    return cleaned[start : end + 1]
 
         return cleaned
 
-    def _parse_response(self, raw: str) -> GeneratedRecipe | str:
+    def _parse_response(self, raw: str) -> dict | str:
         """
         Function to parse the response from the API.
         """
@@ -142,22 +158,7 @@ class GeminiAIManager(BaseAIManager):
 
         # Parse the response as JSON and handle any parsing errors
         try:
-            response = json.loads(json_text)
-            instructions_dict = {
-                key: Instruction(**value)
-                for key, value in response.get("instructions", {}).items()
-            }
+            return json.loads(json_text)
 
-            return GeneratedRecipe(
-                recipe=response.get("recipe"),
-                ingredients=response.get("ingredients"),
-                instructions=instructions_dict,
-                confidence=response.get("confidence"),
-                dietary_preferences=response.get("dietary_preferences"),
-                hazardous_ingredients=response.get("hazardous_ingredients"),
-                equipment=response.get("equipment"),
-                insufficient_ingredients=response.get("insufficient_ingredients"),
-            )
-
-        except (json.JSONDecodeError, TypeError, AttributeError) as e:
+        except json.JSONDecodeError as e:
             return f"JSON parsing error: {e} \nResponse content: {raw}"
