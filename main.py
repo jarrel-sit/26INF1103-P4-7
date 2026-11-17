@@ -74,9 +74,9 @@ class Application:
                 self._handle_recommend_recipe()
             elif choice == 4:
                 self._handle_view_past_recipes()
-            # elif choice == 5:
-            #     self._handle_delete_ingredient()
             elif choice == 5:
+                self._handle_delete_ingredient()
+            elif choice == 6:
                 self.__display.display_logs("Exiting application. Goodbye!")
                 break
 
@@ -185,14 +185,15 @@ class Application:
             return
 
         self.__display.display_ingredients(available)
-        # name = self._collector.collect_ingredient_to_delete()
-        # if not name:
-        #     return
+        name = self._menu.select_to_delete(available)
 
-        # if self._ingredients.delete(name):
-        #     self.__display.display_logs(f"Removed '{name}' from your ingredients.")
-        # else:
-        #     self.__display.display_error(f"Ingredient '{name}' not found.")
+        if not name:
+            return
+
+        if self._ingredients.delete(name):
+            self.__display.display_logs(f"Removed '{name}' from your ingredients.")
+        else:
+            self.__display.display_error(f"Ingredient '{name}' not found.")
 
 
 if __name__ == "__main__":
