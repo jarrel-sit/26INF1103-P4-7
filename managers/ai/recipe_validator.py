@@ -13,6 +13,7 @@ class RecipeValidator:
             errors.append(
                 f"Schema error: expected JSON object, got {type(data).__name__}."
             )
+            return ValidationResult(is_valid=False, errors=errors)
 
         raw_instructions = data.get("instructions")
         if not isinstance(raw_instructions, dict):

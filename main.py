@@ -82,7 +82,11 @@ class Application:
 
     def _handle_add_ingredients(self) -> None:
         updated = self._collector.collect_ingredients()
-        if self._ingredients.save(updated):
+
+        if updated == {}:
+            self.__display.display_logs("No ingredients were added.")
+
+        elif self._ingredients.save(updated):
             self.__display.display_logs("Ingredients saved successfully.")
         else:
             self.__display.display_error("Failed to save ingredients.")
