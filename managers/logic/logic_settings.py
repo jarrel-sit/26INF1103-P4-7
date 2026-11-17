@@ -17,9 +17,8 @@ class LogicSettings:
         ingredients_weight: float = DEFAULT_INGREDIENTS_WEIGHT,
         time_weight: float = DEFAULT_TIME_WEIGHT,
     ):
-        self._confidence_weight = confidence_weight
-        self._ingredients_weight = ingredients_weight
-        self._time_weight = time_weight
+        # Validate and set the scoring weights
+        self.set_weights(confidence_weight, ingredients_weight, time_weight)
 
     @property
     def weights(self) -> tuple[float, float, float]:

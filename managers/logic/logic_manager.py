@@ -40,10 +40,9 @@ class LogicManager:
         self.__evaluator = RuleEvaluator(
             rules if rules is not None else self.default_rules()
         )
-        self.__scorer = scorer if scorer is not None else WeightedScorer()
-        self.__router = OutcomeRouter()
-
         self.__settings = settings or LogicSettings()
+        self.__scorer = scorer if scorer is not None else self.__settings.build_scorer()
+        self.__router = OutcomeRouter()
 
     @staticmethod
     def default_rules() -> list:
@@ -63,7 +62,7 @@ class LogicManager:
 
     def apply_settings(self, settings: LogicSettings) -> None:
         """Applies new user settings and clears any fixed rule/scorer overrides."""
-        self._settings = settings
+        self.__settings = settings
         self.__scorer = settings.build_scorer()
 
     def process(
