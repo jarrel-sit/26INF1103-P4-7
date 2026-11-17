@@ -1,222 +1,219 @@
 # --- Imports --- #
-import io_manager, data_manager, logic_manager
-from managers.ai import GeminiAIManager, GeminiClient, RecipeValidator
-from models import RecipeRequest
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from services import RecipeService
 
-# --- Functions --- #
-# def recipe_pipeline(record, logger=None):
-#     """Pipeline for the recipe generator. Takes in `record` and `logger` as inputs.
-#     - `record`: the loaded data from CSV spreadsheet
-#     - `logger`: enables logging if the logging function is passed through"""
+from managers.ai import GeminiAIManager, GeminiClient, RecipeValidator
+from managers.logic import LogicManager, RoutingDecision
 
-#     # If record is empty
-#     if not record:
-#         io_manager.display_error(
-#             "Please key in some ingredients. Ingredients information is missing."
-#         )
-#         return record
+from managers.data import (
+    RecipeRepository,
+    IngredientRepository,
+    CsvRecipeRepository,
+    CsvIngredientRepository,
+)
 
-#     # Collect user input
-#     user_input = io_manager.collect_input(record)
-
-#     # If user input is empty
-#     if not user_input:
-#         return record
-
-#     # Gets AI response on success
-#     success, response = ai_manager.process(user_input)
-
-#     # If AI response failed checks or is malformed
-#     if not success:
-#         io_manager.display_error(response)
-#         return record
-
-#     # Check response and user input under business rules
-#     combined_output = {**user_input, **response}
-#     evaluated_record = logic_manager.route(combined_output)
-
-#     # Store for memory and access previous accepted recipes
-#     data_manager.save_recipe(evaluated_record, logger=logger)
-
-#     io_manager.display_result(evaluated_record)
-
-#     # Reload updated data from CSV
-#     return data_manager.load_recipes(logger=logger)
+from managers.io import (
+    MenuValidator,
+    MainMenu,
+    SubMenu,
+    RecipeRequestCollector,
+    RecipeRequestValidator,
+    CLIDisplay,
+)
 
 
-def recipe_pipeline(record, recipe_repo, ai_manager):
-    """Pipeline for the recipe generator.
-    - `record`: the user's saved ingredients
-    - `recipe_repo`: the recipe repository used to save and reload recipes"""
+# --- Classes --- #
+class Application:
+    """Top-level application controller managing UI workflows and dependencies."""
 
-    # If record is empty
-    if not record:
-        io_manager.display_error(
-            "Please key in some ingredients. Ingredients information is missing."
+    def __init__(
+        self,
+        ingredients: IngredientRepository,
+        recipe_repository: RecipeRepository,
+        api_key: str,
+    ) -> None:
+        # Association: Repositories exist independently of Application lifecycle
+        self._ingredients: IngredientRepository = ingredients
+
+        # Composition: Application owns and manages UI and service lifecycles
+        self.__display = CLIDisplay()
+        self.__menu_validator = MenuValidator()
+        self.__recipe_validator = RecipeRequestValidator()
+
+        self._menu: MainMenu = MainMenu(self.__menu_validator, self.__display)
+        self._recipe_menu: SubMenu = SubMenu(self.__menu_validator, self.__display)
+        self._collector: RecipeRequestCollector = RecipeRequestCollector(
+            self.__recipe_validator, self.__display
         )
-        return recipe_repo.find_all()
 
-    # Collect user input
-    user_input = io_manager.collect_input(record)
-    recipe_request = RecipeRequest(
-        ingredients=user_input.get("ingredients", {}),
-        available_ingredients=user_input.get("available_ingredients", {}),
-        allergies=user_input.get("allergies", []),
-        dietary_preferences=user_input.get("dietary_preferences", []),
-        pax=user_input.get("pax", 1),
-    )
+        generator = GeminiAIManager(
+            client=GeminiClient(api_key=api_key),
+            validator=RecipeValidator(),
+            max_retries=3,
+        )
+        evaluator = LogicManager()
 
-    # If user input is empty
-    if not user_input:
-        return recipe_repo.find_all()
+        self._service: RecipeService = RecipeService(
+            generator=generator,
+            evaluator=evaluator,
+            repository=recipe_repository,
+        )
 
-    # Gets AI response on success
-    result = ai_manager.process(recipe_request)
+    def run(self) -> None:
+        """Executes the main interactive CLI loop."""
+        while True:
+            self._menu.display_menu_text()
+            choice = int(self._menu.get_choice())
 
-    # If AI response failed checks or is malformed
-    if not result.success:
-        io_manager.display_error(result.error_message)
-        return recipe_repo.find_all()
+            if choice == 1:
+                self._handle_add_ingredients()
+            elif choice == 2:
+                self._handle_list_ingredients()
+            elif choice == 3:
+                self._handle_recommend_recipe()
+            elif choice == 4:
+                self._handle_view_past_recipes()
+            # elif choice == 5:
+            #     self._handle_delete_ingredient()
+            elif choice == 5:
+                self.__display.display_logs("Exiting application. Goodbye!")
+                break
 
-    # Check response and user input under business rules
-    combined_output = {
-        **user_input,
-        **result.recipe.recipe_to_dict(),
-    }  # temporarily convert the GeneratedRecipe object to a dictionary
-    evaluated_record = logic_manager.route(combined_output)
+    def _handle_add_ingredients(self) -> None:
+        updated = self._collector._collect_ingredients()
+        if self._ingredients.save(updated):
+            self.__display.display_logs("Ingredients saved successfully.")
+        else:
+            self.__display.display_error("Failed to save ingredients.")
 
-    # Store for memory and access previous accepted recipes
-    recipe_repo.save(evaluated_record)
+    def _handle_list_ingredients(self) -> None:
+        available = self._ingredients.find_all()
+        if not available:
+            self.__display.display_logs("Your fridge is currently empty.")
+            return
+        self.__display.display_ingredients(available)
 
-    io_manager.display_result(evaluated_record)
-
-    # Reload updated data from CSV
-    return recipe_repo.find_all()
-
-
-def add_ingredients(record, ingredient_repo):
-    ingredients = io_manager.ingredient_input(
-        success_message="\nUpdated the ingredients list!",
-        failure_message="No new ingredients were added. ",
-    )
-
-    if ingredients:
-        success = ingredient_repo.save_all(ingredients)
-
-        if success:
-            io_manager.display_logs(
-                "Successfully saved ingredients to persistent storage."
+    def _handle_recommend_recipe(self) -> None:
+        available = self._ingredients.find_all()
+        if not available:
+            self.__display.display_error(
+                "No ingredients found. Add ingredients before requesting a recipe."
             )
+            return
+
+        request = self._collector.collect_input(available)
+        if request is None:
+            self.__display.display_logs("Recipe request cancelled.")
+            return
+
+        self.__display.display_logs("Generating and evaluating recipe...")
+        result = self._service.generate_recipe(request)
+
+        if isinstance(result, str):
+            self.__display.display_error(result)
         else:
-            io_manager.display_error("Failed to save ingredients to disk.")
+            self.__display.display_result(result)
 
-        return ingredient_repo.find_all()
+    def _handle_view_past_recipes(self) -> None:
+        """Handles the past recipes submenu loop."""
+        while True:
+            self._recipe_menu.display_menu_text()
+            sub_choice = int(self._recipe_menu.get_choice())
 
-    return record
+            if sub_choice == 1:
+                recipes = self._service.get_all_recipes()
+                if not recipes:
+                    self.__display.display_logs("No past recipes found.")
 
-def delete_ingredient(record, ingredient_repo):
-    io_manager.display_ingredients(record)
-    name = io_manager.prompt_ingredient_to_delete()
+                else:
+                    self.__display.display_recipe_list(recipes)
+                    self._view_selected_recipe_details(recipes)
 
-    if not name:
-        io_manager.display_logs("No ingredient entered. Returning...")
-        return record
+            elif sub_choice == 2:
+                recipes = self._service.get_successful_recipes()
 
-    if ingredient_repo.delete(name):
-        io_manager.display_logs(f"Deleted '{name}' from your ingredients.")
-    else:
-        io_manager.display_error(f"'{name}' was not found in your ingredients.")
+                if not recipes:
+                    self.__display.display_logs("No successful recipes found.")
 
-    return ingredient_repo.find_all()
+                else:
+                    self.__display.display_recipe_list(recipes)
+                    self._view_selected_recipe_details(recipes)
 
-# --- Main Program --- #
-def main(logger):
-    """Handles the main program for the entire project. Takes in `logger` as input.
-    - `logger`: enables logging if the logging function is passed through"""
+            elif sub_choice == 3:
+                past_recipes = self._service.get_all_recipes()
 
-    # --- Variables & Constants --- #
-    ingredient_repo = data_manager.CsvIngredientRepository(logger=logger)
-    ingredients = (
-        ingredient_repo.find_all()
-    )  # was data_manager.load_ingredients(logger=logger)
-    recipe_repo = data_manager.CsvRecipeRepository(logger=logger)
-    recipes = recipe_repo.find_all()
+                used_ingredients = sorted(
+                    {
+                        ingredient.strip().lower()
+                        for record in past_recipes
+                        for ingredient in record.ingredients.keys()
+                    }
+                )
 
-    load_dotenv(dotenv_path="./.env")
-    API_KEY = os.getenv("GENAI_API_KEY")
+                selected = self._recipe_menu.select_from_used(used_ingredients)
 
-    gemini_client = GeminiClient(api_key=API_KEY)
-    gemini_manager = GeminiAIManager(client=gemini_client, validator=RecipeValidator())
+                if selected:
+                    filtered = self._service.find_by_ingredient(selected)
 
-    # --- Program Code --- #
-    while True:
-        # Get menu
-        choice = io_manager.menu()
+                    if filtered:
+                        self.__display.display_recipe_list(filtered)
+                        self._view_selected_recipe_details(filtered)
 
-        # Adding of new ingredients
-        if choice == 1:
-            ingredients = add_ingredients(
-                ingredients, ingredient_repo
-            )  # was add_ingredients(ingredients)
+            elif sub_choice == 4:
+                break
 
-        # List all ingredients
-        elif choice == 2:
-            io_manager.display_ingredients(ingredients)
+    def _view_selected_recipe_details(self, recipes: list[RoutingDecision]) -> None:
+        """Prompts the user to select a recipe from a list and displays its details."""
+        if not recipes:
+            self.__display.display_logs("No recipes available to view.")
+            return
 
-        # AI Recipe recommendation
-        elif choice == 3:
-            recipes = recipe_pipeline(
-                ingredients, recipe_repo, gemini_manager
-            )  # was recipe_pipeline(ingredients, logger=logger)
+        selected_recipe = self._recipe_menu.select_recipe(recipes)
 
-        # View past recipe recommendations
-        elif choice == 4:
-            while True:
-                # Get recipe sub menu
-                sub_choice = io_manager.past_recipes_menu()
+        if selected_recipe:
+            self.__display.display_result(selected_recipe)
 
-                # List all past recipes
-                if sub_choice == 1:
-                    io_manager.display_list(recipes)
+    def _handle_delete_ingredient(self) -> None:
+        available = self._ingredients.find_all()
+        if not available:
+            self.__display.display_logs("No ingredients available to delete.")
+            return
 
-                # List successful recipes
-                elif sub_choice == 2:
-                    successful_recipes = recipe_repo.find_successful()
-                    io_manager.display_list(
-                        successful_recipes,
-                        message="There are no saved recipes that contain the query. ",
-                    )
+        self.__display.display_ingredients(available)
+        # name = self._collector.collect_ingredient_to_delete()
+        # if not name:
+        #     return
 
-                # Filter and list recipes based on ingredient matches
-                elif sub_choice == 3:
-                    ingredient_query = io_manager.prompt_ingredient_query()
-                    if ingredient_query:
-                        filtered_recipes = recipe_repo.find_by_ingredient(
-                            ingredient_query
-                        )
-
-                        io_manager.display_list(
-                            filtered_recipes,
-                            message="There are no saved recipes that contain the query. ",
-                        )
-
-                    else:
-                        io_manager.display_logs(
-                            "Ingredient query is empty. Returning..."
-                        )
-
-                # Exit back to main menu
-                elif sub_choice == 4:
-                    break
-        # Delete an ingredient
-        elif choice == 5:
-            ingredients = delete_ingredient(ingredients, ingredient_repo)
-        # Exit program
-        else:
-            break
+        # if self._ingredients.delete(name):
+        #     self.__display.display_logs(f"Removed '{name}' from your ingredients.")
+        # else:
+        #     self.__display.display_error(f"Ingredient '{name}' not found.")
 
 
 if __name__ == "__main__":
-    main(io_manager.display_logs)
+    load_dotenv(dotenv_path="./.env")
+    api_key = os.getenv("GENAI_API_KEY", "")
+
+    ingredient_repo = CsvIngredientRepository(
+        "ingredients_data.csv",
+        fieldnames=["session_id", "timestamp", "ingredient", "quantity"],
+    )
+    recipe_repo = CsvRecipeRepository(
+        "recipe_data.csv",
+        fieldnames=[
+            "recipe",
+            "outcome",
+            "score",
+            "reason",
+            "ingredients",
+            "instructions",
+        ],
+    )
+
+    app = Application(
+        ingredients=ingredient_repo,
+        recipe_repository=recipe_repo,
+        api_key=api_key,
+    )
+    app.run()
