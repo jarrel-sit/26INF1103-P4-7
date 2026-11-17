@@ -35,7 +35,7 @@ class RecipeRequestCollector:
 
     # Recieves input for diet
     def _collect_diet(self):
-        self.user_diet = "none"
+        self.user_diet = None
         while True:
             diet = (
                 input(
@@ -50,7 +50,7 @@ class RecipeRequestCollector:
                 self.user_diet = diet
                 return self.user_diet
             elif not success and diet == "none":
-                self.user_diet = diet
+                self.user_diet = None
                 return self.user_diet
             else:
                 self._display.display_error(
