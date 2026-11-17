@@ -34,7 +34,7 @@ class SubMenu(Menu):
         self._displayer.display_logs("  0. Cancel")
 
         while True:
-            raw_choice = input("Select an ingredient number: ").strip()
+            raw_choice = self.get_choice()
 
             if raw_choice == "0":
                 return None

@@ -81,7 +81,7 @@ class Application:
                 break
 
     def _handle_add_ingredients(self) -> None:
-        updated = self._collector._collect_ingredients()
+        updated = self._collector.collect_ingredients()
         if self._ingredients.save(updated):
             self.__display.display_logs("Ingredients saved successfully.")
         else:

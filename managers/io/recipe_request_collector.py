@@ -80,7 +80,7 @@ class RecipeRequestCollector:
             
 
     # Recieves input for ingredients
-    def _collect_ingredients(self, available_ingredients: list[str] = None):
+    def collect_ingredients(self, available_ingredients: list[str] = None):
         self.user_ingredients = {}
         while True:
             ingredient = input(
