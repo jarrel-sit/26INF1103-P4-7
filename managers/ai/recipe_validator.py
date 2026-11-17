@@ -1,4 +1,5 @@
 # --- Imports --- #
+import math
 from models import GeneratedRecipe, Instruction, ValidationResult
 
 
@@ -47,8 +48,9 @@ class RecipeValidator:
 
         if (
             response.confidence is None
+            or isinstance(response.confidence, bool)
             or not isinstance(response.confidence, (int, float))
-            or response == float("nan")
+            or math.isnan(response.confidence)
             or response.confidence < 0
             or response.confidence > 1
         ):
