@@ -78,19 +78,15 @@ class GeminiAIManager(BaseAIManager):
         as well. Include the serving sizes and time taken for each recipe. Convert any quantities of online recipes found 
         online to grams and millimeters. Do not include any suggestions to modify the recipes. Include a list of 
         utensils needed, and time taken for each step of the recipe. Include how much of each ingredient is used 
-        in each step while describing the step. If there are not enough ingredients to make a legitimate recipe, 
+        in each step while describing the step. If at any pointthere are not enough ingredients to make a legitimate recipe, like for example once some ingredients are removed due to dietary preferences/allergies, then  
         indicate true in the JSON file, otherwise indicate false. Remove any hazardous or inedible ingredients. 
         and write them at the bottom of the JSON file. Return the confidence level of the recipe recommendation 
         from 0 to 1 for evaluating it's usability. 
 
-        If the recipe detects a conflict in dietary preferences/allergies and ingredients provided, try to avoid using them
-        and put them into hazardous ingredients list. If it is possible to avoid the conflict, carry on as per 
-        normal and return original outputs.
-        
-        However, if the recipe has to have ingredients provided that conflicts with dietary preferences/allergies, do not include 
-        the conflicting dietary preferences/allergies within the response. The hazardous ingredients should also contain the 
-        conflicting ingredients, then the confidence score should be strictly marked down in the case of conflict. 
-        
+        If the recipe detects a conflict in dietary preferences/allergies and ingredients provided, avoid using them at all costs
+        and put them into hazardous ingredients list. Once all ingredients that conflict with dietary preferences/allergies are removed, generate the recipe 
+        with the remaining ingredients. 
+                
         Ingredients: {ingredients_str}, 
 
         Allergies: {allergies_str},
