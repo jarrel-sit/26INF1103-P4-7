@@ -11,7 +11,7 @@ class GeminiAIManager(BaseAIManager):
     def __init__(
         self, client: GeminiClient, validator: RecipeValidator, max_retries: int = 3
     ):
-        self._client = client
+        super().__init__(client)
         self._validator = validator
         self._max_retries = max_retries
         self.required_keys = {
