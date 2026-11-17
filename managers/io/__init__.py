@@ -10,6 +10,7 @@ from .recipe_request_validator import RecipeRequestValidator
 # --- Menu IO Manager ---
 from .main_menu import MainMenu
 from .sub_menu import SubMenu
+from .settings_menu import SettingsMenu
 from .menu_validator import MenuValidator
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "RecipeRequestValidator",
     "MainMenu",
     "SubMenu",
+    "SettingsMenu",
     "MenuValidator",
 ]

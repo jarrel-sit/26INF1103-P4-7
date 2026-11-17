@@ -17,6 +17,7 @@ from managers.io import (
     MenuValidator,
     MainMenu,
     SubMenu,
+    SettingsMenu,
     RecipeRequestCollector,
     RecipeRequestValidator,
     CLIDisplay,
@@ -43,6 +44,9 @@ class Application:
 
         self._menu: MainMenu = MainMenu(self.__menu_validator, self.__display)
         self._recipe_menu: SubMenu = SubMenu(self.__menu_validator, self.__display)
+        self._settings_menu: SettingsMenu = SettingsMenu(
+            self.__menu_validator, self.__display
+        )
         self._collector: RecipeRequestCollector = RecipeRequestCollector(
             self.__recipe_validator, self.__display
         )
@@ -77,6 +81,8 @@ class Application:
             elif choice == 5:
                 self._handle_delete_ingredient()
             elif choice == 6:
+                self._handle_edit_settings()
+            elif choice == 7:
                 self.__display.display_logs("Exiting application. Goodbye!")
                 break
 
@@ -177,6 +183,20 @@ class Application:
 
         if selected_recipe:
             self.__display.display_result(selected_recipe)
+
+    def _handle_edit_settings(self) -> None:
+        """Handles the settings submenu for configuring scoring weights."""
+
+        self._settings_menu.display_menu_text()
+
+        current_settings = self._service._evaluator.settings
+        updated_settings = self._settings_menu.configure(current_settings)
+
+        if updated_settings:
+            self._service._evaluator.apply_settings(updated_settings)
+            self.__display.display_logs("Scoring weights updated successfully.")
+        else:
+            self.__display.display_logs("Settings update cancelled.")
 
     def _handle_delete_ingredient(self) -> None:
         available = self._ingredients.find_all()

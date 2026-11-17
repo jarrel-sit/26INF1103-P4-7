@@ -7,7 +7,7 @@ from .menu_validator import MenuValidator
 # --- Classes --- #
 class MainMenu(Menu):
     def __init__(self, validator: MenuValidator, displayer: Display):
-        super().__init__(choices=6, validator=validator, displayer=displayer)
+        super().__init__(choices=7, validator=validator, displayer=displayer)
 
     def display_menu_text(self):
         self._displayer.display_menu(
@@ -21,7 +21,8 @@ class MainMenu(Menu):
 |  3. Recommend me a recipe!    |
 |  4. View past recipes         |
 |  5. Delete an ingredient      |
-|  6. Exit                      |
+|  6. Configure rule settings   |
+|  7. Exit                      |
 |                               |
 =================================""",
         )
