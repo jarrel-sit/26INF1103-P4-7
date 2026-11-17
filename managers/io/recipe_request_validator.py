@@ -70,9 +70,11 @@ class RecipeRequestValidator:
 
                     return ingredient
 
-            else:
-                log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
-                self._display.display_error(log)
+        elif not match and ingredient != "done":
+            log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
+            self._display.display_error(log)
+
+        
 
     def validate_quantity(self, ingredient, quantity, unit, available_ingredients):
         """Validates the quantity of the ingredient input by the user."""
