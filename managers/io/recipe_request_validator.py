@@ -7,8 +7,8 @@ class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
     def __init__(self):
-        self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)$"
-        self.quantity_pattern = r"(\d+)\s*(g|ml)"
+        self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+(?:\.\d+)?)\s*(g|ml)"
+        self.quantity_pattern = r"(\d+(?:\.\d+)?)\s*(g|ml)"
         self._display = CLIDisplay()
     # Validation for diet
     def validate_diet(self, diet, dietlist):
@@ -33,12 +33,13 @@ class RecipeRequestValidator:
     # Validation for ingredients
     def validate_ingredients(self, ingredient, available_ingredients=None):
         match = re.match(self.input_pattern, ingredient)
-        if match and re.search(r"[^\w\s]", ingredient) is None:
+        if match and re.search(r"[^\w\s.]", ingredient) is None:
             name = match.group(1)
+            amt = float((match.group(2)))
             if (
-                match.group(2).isnumeric()
-                and match.group(3) == "ml"
-                or match.group(3) == "g"
+                isinstance(amt, float)
+                and (match.group(3) == "ml"
+                or match.group(3) == "g")
             ):
                 if available_ingredients is not None:
                     success = self.validate_quantity(
