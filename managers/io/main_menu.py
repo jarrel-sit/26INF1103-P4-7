@@ -10,16 +10,17 @@ class MainMenu(Menu):
         super().__init__(choices=6, validator=validator, displayer=displayer)
 
     def display_menu_text(self):
-        self.msg = """
-        =================================
-        |           Main Menu           |
-        |-------------------------------|
-        |                               |
-        |  1. Add new ingredients       |
-        |  2. List current ingredients  |
-        |  3. Recommend me a recipe!    |
-        |  4. View past recipes         |
-        |  5. Exit                      |
-        |                               |
-        ================================="""
-        self._displayer.display_menu(self,self.msg)
+        self._displayer.display_menu(
+            """
+=================================
+|           Main Menu           |
+|-------------------------------|
+|                               |
+|  1. Add new ingredients       |
+|  2. List current ingredients  |
+|  3. Recommend me a recipe!    |
+|  4. View past recipes         |
+|  5. Exit                      |
+|                               |
+=================================""",
+        )

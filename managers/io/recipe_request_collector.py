@@ -51,7 +51,8 @@ class RecipeRequestCollector:
                 return self.user_diet
             elif not success and diet == "none":
                 self.user_diet = None
-                return self.user_diet
+            else:
+                continue
             return
 
     # Recieves input for allergy
