@@ -94,15 +94,15 @@ class GeminiAIManager(BaseAIManager):
             """
         return prompt
 
-    def call_api(self, prompt: str = "", max_retries: int = 3, delay: int = 2) -> str:
+    def call_api(self, prompt: str, delay: int = 2) -> str:
         # Retries the API calls, only fail if all tries unsuccessful
-        for attempt in range(1, max_retries + 1):
+        for attempt in range(1, self._max_retries + 1):
             try:
                 response = self._client.generate(prompt)
                 return response
             except Exception as e:
                 # Handles retries
-                if attempt < max_retries:
+                if attempt < self._max_retries:
                     # Wait in increasing timeframes
                     time.sleep(delay * attempt)
                     continue
