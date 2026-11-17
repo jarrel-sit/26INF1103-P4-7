@@ -193,7 +193,7 @@ class Application:
         updated_settings = self._settings_menu.configure(current_settings)
 
         if updated_settings:
-            self._service._evaluator.apply_settings(updated_settings)
+            self._service.apply_settings(updated_settings)
             self.__display.display_logs("Scoring weights updated successfully.")
         else:
             self.__display.display_logs("Settings update cancelled.")
