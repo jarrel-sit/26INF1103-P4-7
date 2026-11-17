@@ -52,10 +52,6 @@ class RecipeRequestCollector:
             elif not success and diet == "none":
                 self.user_diet = None
                 return self.user_diet
-            else:
-                self._display.display_error(
-                    "We do not recognise this diet type. Ensure you typed it in correctly."
-                )
             return
 
     # Recieves input for allergy
@@ -76,10 +72,7 @@ class RecipeRequestCollector:
                 print(self.user_allergies)
             elif not success and allergy == "done":
                 return self.user_allergies
-            else:
-                self._display.display_error(
-                    "We do not recognise this allergy. Ensure you typed it in correctly."
-                )
+            
 
     # Recieves input for ingredients
     def _collect_ingredients(self, available_ingredients: list[str] = None):
@@ -97,7 +90,3 @@ class RecipeRequestCollector:
                 self.user_ingredients.update(success)
             elif not success and ingredient == "done":
                 return self.user_ingredients
-            else:
-                self._display.display_error(
-                    "Invalid input, please ensure you have entered the ingredient in the correct format. "
-                )

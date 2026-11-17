@@ -1,6 +1,6 @@
 # --- Imports --- #
 import re
-
+from .cli_display import CLIDisplay
 
 # --- Classes --- #
 class RecipeRequestValidator:
@@ -9,22 +9,27 @@ class RecipeRequestValidator:
     def __init__(self):
         self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+)\s*(g|ml)$"
         self.quantity_pattern = r"(\d+)\s*(g|ml)"
-
+        self._display = CLIDisplay
     # Validation for diet
     def validate_diet(self, diet, dietlist):
         if diet in dietlist:
-            print(
-                f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
-            )
+            self.log = f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
+            self._display.display_logs(self,self.log)
+                #f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
             return True
+        else:
+            self.log = f"We do not recognise this diet type. Ensure you typed it in correctly."
+            self._display.display_error(self,self.log)
 
     # Validation for allergy
     def validate_allergy(self, allergy, allergylist):
         if allergy in allergylist:
-            print(
-                f"Taken note of {allergy} allergy, we will not include {allergy} in your generated recipes"
-            )
+            self.log =  f"Taken note of {allergy} allergy, we will not include {allergy} in your generated recipes"
+            self._display.display_logs(self, self.log)
             return True
+        else:
+            self.log = f"We do not recognise this allergy. Ensure you typed it in correctly."
+            self._display.display_error(self,self.log)
 
     # Validation for ingredients
     def validate_ingredients(self, ingredient, available_ingredients=None):
@@ -46,17 +51,16 @@ class RecipeRequestValidator:
 
                 if success:
                     quantity = match.group(2) + match.group(3)
-                    print(
-                        f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
-                    )
+                    self.log = f"Valid input received. {name.title()} {quantity} has been added to the ingredients list."
+                    self._display.display_logs(self, self.log)
                     ingredient = {name: quantity}
 
                     return ingredient
 
             else:
-                print(
-                    "Invalid item detected. Please ensure that ingredient entered follows the proper format."
-                )
+                
+                self.log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
+                self._display.display_error(self,self.log)
 
     def validate_quantity(self, ingredient, quantity, unit, available_ingredients):
         """Validates the quantity of the ingredient input by the user."""
@@ -73,7 +77,5 @@ class RecipeRequestValidator:
             ):
                 return True
 
-        print(
-            f"Invalid quantity for {ingredient.title()}. Please ensure the quantity is within available stock."
-        )
+        self._display.display_error (f"Invalid quantity for {ingredient.title()}. Please ensure the quantity is within available stock.")
         return False
