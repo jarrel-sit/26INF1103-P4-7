@@ -23,7 +23,7 @@ class RecipeRequestCollector:
         allergy = self._collect_allergy()
 
         self._display.display_ingredients(available_ingredients)
-        ingredients = self._collect_ingredients(available_ingredients)
+        ingredients = self.collect_ingredients(available_ingredients)
 
         return RecipeRequest(
             ingredients=ingredients,
@@ -36,10 +36,13 @@ class RecipeRequestCollector:
     # Recieves input for diet
     def _collect_diet(self):
         self.user_diet = None
+        self._display.display_logs("\nList of known diets")
+        for i in self.dietlist:
+            self._display.display_logs(f"- {i.capitalize()}")
         while True:
             diet = (
                 input(
-                    "Do you have any dietary restrictions? Input none if not applicable: \n"
+                    "\nDo you have any of these dietary restrictions? Input none if not applicable: \n"
                 )
                 .lower()
                 .strip()
@@ -60,10 +63,14 @@ class RecipeRequestCollector:
     # Recieves input for allergy
     def _collect_allergy(self):
         self.user_allergies = []
+        self._display.display_logs("\nList of known allergies")
+        for i in self.allergylist:
+            self._display.display_logs(f"- {i.capitalize()}")
+        
         while True:
             allergy = (
                 input(
-                    "Do you have any allergies? Input if any, input done when there are no more allergies to be input: \n"
+                    "\n Do you have any of these allergies? Input if any, input done when there are no more allergies to be input: \n"
                 )
                 .lower()
                 .strip()
@@ -71,7 +78,6 @@ class RecipeRequestCollector:
             success = self.__validator.validate_allergy(allergy, self.allergylist)
 
             if allergy == "done":
-                print(self.user_allergies)
                 return self.user_allergies
                 
             elif success:
