@@ -35,7 +35,9 @@ class GeminiAIManager(BaseAIManager):
             if validation.is_valid:
                 return AIResult(success=True, recipe=recipe)
             else:
-                return AIResult(success=False, error_message=", ".join(validation.errors))
+                return AIResult(
+                    success=False, error_message=", ".join(validation.errors)
+                )
 
         return AIResult(success=False, error_message=recipe)
 
@@ -132,16 +134,14 @@ class GeminiAIManager(BaseAIManager):
             }
 
             return GeneratedRecipe(
-                recipe=response.get("recipe", ""),
-                ingredients=response.get("ingredients", {}),
+                recipe=response.get("recipe"),
+                ingredients=response.get("ingredients"),
                 instructions=instructions_dict,
-                confidence=response.get("confidence", 0),
-                dietary_preferences=response.get("dietary_preferences", []),
-                hazardous_ingredients=response.get("hazardous_ingredients", {}),
-                equipment=response.get("equipment", []),
-                insufficient_ingredients=response.get(
-                    "insufficient_ingredients", False
-                ),
+                confidence=response.get("confidence"),
+                dietary_preferences=response.get("dietary_preferences"),
+                hazardous_ingredients=response.get("hazardous_ingredients"),
+                equipment=response.get("equipment"),
+                insufficient_ingredients=response.get("insufficient_ingredients"),
             )
 
         except (json.JSONDecodeError, TypeError, AttributeError) as e:

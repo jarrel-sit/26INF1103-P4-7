@@ -48,6 +48,7 @@ class RecipeValidator:
         if (
             response.confidence is None
             or not isinstance(response.confidence, (int, float))
+            or response == float("nan")
             or response.confidence < 0
             or response.confidence > 1
         ):
@@ -56,6 +57,16 @@ class RecipeValidator:
         if not isinstance(response.equipment, list):
             errors.append(
                 "Equipment value is missing or not of the expected type (list)."
+            )
+
+        if not isinstance(response.dietary_preferences, list):
+            errors.append(
+                "Dietary Preferences value is missing or not of the expected type (list)."
+            )
+
+        if not isinstance(response.hazardous_ingredients, dict):
+            errors.append(
+                "Hazardous Ingredients value is missing or not of the expected type (dict)."
             )
 
         if not isinstance(response.insufficient_ingredients, bool):
