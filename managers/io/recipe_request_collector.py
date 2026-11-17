@@ -48,8 +48,9 @@ class RecipeRequestCollector:
 
             if success and diet != "none":
                 self.user_diet = diet
+                print(self.user_diet)
                 return self.user_diet
-            elif success and diet == "none":
+            elif diet == "none":
                 self.user_diet = None
                 return self.user_diet
             else:
@@ -69,11 +70,11 @@ class RecipeRequestCollector:
             )
             success = self.__validator.validate_allergy(allergy, self.allergylist)
 
-            if success and allergy == "done":
+            if allergy == "done":
                 print(self.user_allergies)
                 return self.user_allergies
                 
-            elif success and allergy == "done":
+            elif success:
                 self.user_allergies.append(allergy)
                 
             

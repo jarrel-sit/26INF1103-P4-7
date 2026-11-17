@@ -16,11 +16,11 @@ class RecipeRequestValidator:
             self._display.display_logs(f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions.")
                 #f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
             return True
-        elif diet not in dietlist and diet == "none":
-            log = f"No dietary restrictions, we will take that into consideration."
-            self._display.display_logs(log)
-            return True
-        else:
+        #elif diet not in dietlist and diet == "none":
+        #     log = f"No dietary restrictions, we will take that into consideration."
+        #     self._display.display_logs(log)
+        #     return True
+        elif diet not in dietlist and diet != 'none':
             log = f"We do not recognise this diet type. Ensure you typed it in correctly."
             self._display.display_error(log)
             return False
@@ -31,11 +31,11 @@ class RecipeRequestValidator:
             log =  f"Taken note of {allergy} allergy, we will not include {allergy} in your generated recipes"
             self._display.display_logs(log)
             return True
-        elif allergy not in allergylist and allergy == "done":
-            log = f"No food allergies, we will take that into consideration."
-            self._display.display_logs(log)
-            return True
-        else:
+        # elif allergy not in allergylist and  allergy == "done":
+        #     log = f"No food allergies, we will take that into consideration."
+        #     self._display.display_logs(log)
+        #     return True
+        elif allergy not in allergylist and allergy != 'done':
             log = f"We do not recognise this allergy. Ensure you typed it in correctly."
             self._display.display_error(log)
 
