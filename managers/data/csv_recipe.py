@@ -15,24 +15,16 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
             return False
 
         if isinstance(recipe, RoutingDecision):
-            row = {
-                "recipe": recipe.recipe,
-                "outcome": recipe.outcome.value,
-                "score": recipe.score,
-                "reason": recipe.reason,
-                "ingredients": json.dumps(recipe.ingredients),
-                "instructions": json.dumps(recipe.instructions),
-            }
+            recipe = recipe.to_dict()
 
-        else:
-            row = {
-                "recipe": recipe.get("recipe", "Unknown Recipe"),
-                "outcome": recipe.get("outcome", "unknown"),
-                "score": recipe.get("score", 0.0),
-                "reason": recipe.get("reason", ""),
-                "ingredients": json.dumps(recipe.get("ingredients", [])),
-                "instructions": json.dumps(recipe.get("instructions", [])),
-            }
+        row = {
+            "recipe": recipe.get("recipe", "Unknown Recipe"),
+            "outcome": recipe.get("outcome", "unknown"),
+            "score": recipe.get("score", 0.0),
+            "reason": recipe.get("reason", ""),
+            "ingredients": json.dumps(recipe.get("ingredients", [])),
+            "instructions": json.dumps(recipe.get("instructions", [])),
+        }
 
         return super().save(row)
 
