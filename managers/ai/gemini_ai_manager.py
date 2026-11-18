@@ -33,6 +33,10 @@ class GeminiAIManager(BaseAIManager):
     def process(self, request: RecipeRequest) -> AIResult:
         prompt = self._build_prompt(request)
         raw_response = self.call_api(prompt)
+
+        if isinstance(raw_response, str) and raw_response.startswith("Transport or connection exception"):
+            return AIResult(success=False, error_message=raw_response)
+
         parsed = self._parse_response(raw_response)
 
         if isinstance(parsed, str):
