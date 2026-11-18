@@ -83,3 +83,22 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
             raise ValueError("missing ingredient/quantity")
 
         return row
+
+    def update(self, name, quantity):
+        """Sets an ingredient's quantity to the given value (replaces, does not add).
+        Returns True if the ingredient existed and was updated."""
+        name = str(name).strip().lower()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        rows = self.load()
+
+        found = False
+        for row in rows:
+            if str(row["ingredient"]).strip().lower() == name:
+                row["quantity"] = quantity
+                row["timestamp"] = timestamp
+                found = True
+
+        if not found:
+            return False
+
+        return super().save(rows)
