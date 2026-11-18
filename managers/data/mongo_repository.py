@@ -11,9 +11,7 @@ class MongoRepository(Repository):
     for saving and loading documents. Subclasses implement _process_document to
     turn a stored document into the record format the program uses."""
 
-    def __init__(
-        self, uri: str, db_name: str, collection_name: str, logger: function = None
-    ):
+    def __init__(self, uri: str, db_name: str, collection_name: str, logger=None):
         self.__logger = logger
         self._collection = MongoClient(uri, serverSelectionTimeoutMS=3000)[db_name][
             collection_name
@@ -57,7 +55,7 @@ class MongoRepository(Repository):
         self._log(f"[Data Manager] Loaded {len(records)} record(s) from database.")
         return records
 
-    def query(self, filter_fn: function) -> list:
+    def query(self, filter_fn) -> list:
         """Returns all records for which filter_fn(record) is True."""
         return [record for record in self.load() if filter_fn(record)]
 

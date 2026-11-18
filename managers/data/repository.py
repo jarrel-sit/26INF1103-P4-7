@@ -17,7 +17,7 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def query(self, filter_fn: function) -> list:
+    def query(self, filter_fn) -> list:
         """
         Accepts a filter function and returns all matching records.
         Example: query(lambda r: r["outcome"] == "accept")

@@ -130,7 +130,7 @@ class CsvRepository(Repository):
         if self.__logger:
             self.__logger(message)
 
-    def query(self, filter_fn: function) -> list:
+    def query(self, filter_fn) -> list:
         """
         Accepts a filter function and returns all matching records.
         Example: query(lambda r: r["outcome"] == "accept")
