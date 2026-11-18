@@ -36,7 +36,7 @@ class GeminiAIManager(BaseAIManager):
     def process(self, request: RecipeRequest) -> AIResult:
         """Processes a recipe request by building a prompt, calling the Gemini API, and validating the response."""
         prompt = self._build_prompt(request)
-        raw_response = self.call_api(prompt)
+        raw_response = self._call_api(prompt)
 
         # Handle transport or connection exceptions
         if isinstance(raw_response, str) and raw_response.startswith(
@@ -118,7 +118,7 @@ class GeminiAIManager(BaseAIManager):
             """
         return prompt
 
-    def call_api(self, prompt: str, delay: int = 2) -> str:
+    def _call_api(self, prompt: str, delay: int = 2) -> str:
         """Function to call the Gemini API with retries and exponential backoff."""
         # Retries the API calls, only fail if all tries unsuccessful
         for attempt in range(1, self._max_retries + 1):
