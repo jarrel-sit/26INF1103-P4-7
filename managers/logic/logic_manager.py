@@ -15,6 +15,7 @@ from .record_validator import RecordValidator
 from .routing_decision import RoutingDecision
 from .rule_evaluator import RuleEvaluator
 from .weighted_scorer import WeightedScorer
+from .logic_settings import LogicSettings
 
 
 class LogicManager:
@@ -33,12 +34,14 @@ class LogicManager:
         scorer: Optional[IScorer] = None,
         rules: Optional[Iterable[IRule]] = None,
         validator: Optional[RecordValidator] = None,
+        settings: Optional[LogicSettings] = None,
     ):
         self.__validator = validator if validator is not None else RecordValidator()
         self.__evaluator = RuleEvaluator(
             rules if rules is not None else self.default_rules()
         )
-        self.__scorer = scorer if scorer is not None else WeightedScorer()
+        self.__settings = settings or LogicSettings()
+        self.__scorer = scorer if scorer is not None else self.__settings.build_scorer()
         self.__router = OutcomeRouter()
 
     @staticmethod
@@ -52,7 +55,19 @@ class LogicManager:
             AIConfidenceRule(),
         ]
 
-    def process(self, request: RecipeRequest, recipe: GeneratedRecipe) -> RoutingDecision:
+    @property
+    def settings(self) -> LogicSettings:
+        """The LogicSettings instance that controls the business rules."""
+        return self.__settings
+
+    def apply_settings(self, settings: LogicSettings) -> None:
+        """Applies new user settings and clears any fixed rule/scorer overrides."""
+        self.__settings = settings
+        self.__scorer = settings.build_scorer()
+
+    def process(
+        self, request: RecipeRequest, recipe: GeneratedRecipe
+    ) -> RoutingDecision:
         """Same style as the AI manager's process(): takes the team models and
         returns the decision. Raises InvalidRecordError on a malformed record."""
         return self.route(self.__combine(request, recipe))

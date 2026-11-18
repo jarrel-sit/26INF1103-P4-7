@@ -43,3 +43,7 @@ class RecipeService:
 
     def find_by_ingredient(self, name: str) -> list[RoutingDecision]:
         return self._repository.find_by_ingredient(name)
+
+    def apply_settings(self, settings) -> None:
+        """Updates the LogicManager's scoring weights."""
+        self._evaluator.apply_settings(settings)
