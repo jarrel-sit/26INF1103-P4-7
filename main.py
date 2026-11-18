@@ -92,6 +92,7 @@ class Application:
                 break
 
     def _handle_add_ingredients(self) -> None:
+        """Handles the process of adding new ingredients to the repository."""
         updated = self._collector.collect_ingredients()
 
         if updated == {}:
@@ -103,6 +104,7 @@ class Application:
             self.__display.display_error("Failed to save ingredients.")
 
     def _handle_update_ingredient(self) -> None:
+        """Handles the process of updating an existing ingredient's quantity."""
         available = self._ingredients.find_all()
         if not available:
             self.__display.display_logs("No ingredients available to update.")
@@ -121,6 +123,7 @@ class Application:
             self.__display.display_error(f"Ingredient '{name}' not found.")
 
     def _handle_list_ingredients(self) -> None:
+        """Displays all currently stored ingredients and their quantities."""
         available = self._ingredients.find_all()
         if not available:
             self.__display.display_logs("Your fridge is currently empty.")
@@ -128,6 +131,7 @@ class Application:
         self.__display.display_ingredients(available)
 
     def _handle_recommend_recipe(self) -> None:
+        """Handles the process of generating and evaluating a recipe based on user input."""
         available = self._ingredients.find_all()
         if not available:
             self.__display.display_error(
@@ -222,6 +226,7 @@ class Application:
             self.__display.display_logs("Settings update cancelled.")
 
     def _handle_delete_ingredient(self) -> None:
+        """Handles the process of deleting an ingredient from the repository."""
         available = self._ingredients.find_all()
         if not available:
             self.__display.display_logs("No ingredients available to delete.")
@@ -247,9 +252,13 @@ if __name__ == "__main__":
     display = CLIDisplay()
 
     # --- Variables & Constants --- #
-    ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
+    ingredient_repo = MongoIngredientRepository(
+        MONGO_URI, "recipe_planner", logger=display.display_error
+    )
     ingredients = ingredient_repo.find_all()
-    recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
+    recipe_repo = MongoRecipeRepository(
+        MONGO_URI, "recipe_planner", logger=display.display_error
+    )
     recipes = recipe_repo.find_all()
 
     app = Application(
