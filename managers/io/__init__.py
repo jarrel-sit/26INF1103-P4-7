@@ -2,6 +2,7 @@
 
 # --- Display IO Manager ---
 from .cli_display import CLIDisplay
+from .display import Display
 
 # --- Recipe Request Manager ---
 from .recipe_request_collector import RecipeRequestCollector
@@ -15,6 +16,7 @@ from .menu_validator import MenuValidator
 
 __all__ = [
     "CLIDisplay",
+    "Display",
     "RecipeRequestCollector",
     "RecipeRequestValidator",
     "MainMenu",

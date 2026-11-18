@@ -2,7 +2,11 @@
 import os
 from dotenv import load_dotenv
 from services import RecipeService
-from managers.data import MongoIngredientRepository, CsvRecipeRepository, MongoRecipeRepository
+from managers.data import (
+    MongoIngredientRepository,
+    CsvRecipeRepository,
+    MongoRecipeRepository,
+)
 
 from managers.ai import GeminiAIManager, GeminiClient, RecipeValidator
 from managers.logic import LogicManager, RoutingDecision
@@ -21,6 +25,7 @@ from managers.io import (
     SettingsMenu,
     RecipeRequestCollector,
     RecipeRequestValidator,
+    Display,
     CLIDisplay,
 )
 
@@ -34,12 +39,13 @@ class Application:
         ingredients: IngredientRepository,
         recipe_repository: RecipeRepository,
         api_key: str,
+        display: Display,
     ) -> None:
         # Association: Repositories exist independently of Application lifecycle
         self._ingredients: IngredientRepository = ingredients
 
         # Composition: Application owns and manages UI and service lifecycles
-        self.__display = CLIDisplay()
+        self.__display = display
         self.__menu_validator = MenuValidator()
         self.__recipe_validator = RecipeRequestValidator(self.__display)
 
@@ -109,22 +115,10 @@ class Application:
         available = self._ingredients.find_all()
         if not available:
             self.__display.display_error(
-                "No ingredients found. Add ingredients before requesting a recipe.")
+                "No ingredients found. Add ingredients before requesting a recipe."
+            )
 
-# def add_ingredients(record, ingredient_repo):
-#     ingredients = io_manager.ingredient_input(
-#         success_message="\nUpdated the ingredients list!",
-#         failure_message="No new ingredients were added. ",
-#     )
-
-#     if ingredients:
-#         success = ingredient_repo.save(ingredients)
-
-#         if success:
-#             io_manager.display_logs(
-#                 "Successfully saved ingredients to persistent storage."
-#             )
-#             return
+            return
 
         request = self._collector.collect_input(available)
         if request is None:
@@ -151,7 +145,7 @@ class Application:
                     self.__display.display_logs("No past recipes found.")
 
                 else:
-                    self.__display.display_recipe_list(recipes) 
+                    self.__display.display_recipe_list(recipes)
                     self._view_selected_recipe_details(recipes)
 
             elif sub_choice == 2:
@@ -235,16 +229,19 @@ if __name__ == "__main__":
     api_key = os.getenv("GENAI_API_KEY", "")
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 
+    display = CLIDisplay()
+
     # --- Variables & Constants --- #
-    ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner")
+    ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
     ingredients = ingredient_repo.find_all()
     # recipe_repo = data_manager.CsvRecipeRepository(logger=logger)
-    recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner")
+    recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
     recipes = recipe_repo.find_all()
 
     app = Application(
         ingredients=ingredient_repo,
         recipe_repository=recipe_repo,
         api_key=api_key,
+        display=display,
     )
     app.run()
