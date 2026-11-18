@@ -8,10 +8,10 @@ from .ingredient_repo import IngredientRepository
 class CsvIngredientRepository(CsvRepository, IngredientRepository):
     """Ingredient repository that stores data in a CSV file."""
 
-    def __init__(self, filepath, fieldnames, logger=None):
+    def __init__(self, filepath: str, fieldnames: list, logger=None):
         super().__init__(filepath, fieldnames, mode="w", logger=logger)
 
-    def __next_session_id(self, rows) -> int:
+    def __next_session_id(self, rows: list) -> int:
         """Next session_id, based on rows already loaded."""
         ids = []
         for row in rows:
@@ -26,7 +26,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
         rows = self.load()
         return {row["ingredient"]: row["quantity"] for row in rows}
 
-    def save(self, ingredients) -> bool:
+    def save(self, ingredients: dict) -> bool:
         """Adds new ingredients and adds up quantities of existing ones."""
         if not ingredients:
             return False
@@ -57,12 +57,12 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return super().save(rows)
 
-    def __filter_exclude_ingredient(self, name) -> list:
+    def __filter_exclude_ingredient(self, name: str) -> list:
         """Returns all rows except those with the given ingredient name using query()."""
         name = str(name).strip().lower()
         return self.query(lambda r: str(r["ingredient"]).strip().lower() != name)
 
-    def delete(self, name) -> bool:
+    def delete(self, name: str) -> bool:
         """Deletes all rows with the given ingredient name. Returns True if any rows were deleted."""
         remaining = self.__filter_exclude_ingredient(name)
 
@@ -72,7 +72,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return super().save(remaining)
 
-    def _process_data_row(self, row) -> dict:
+    def _process_data_row(self, row: dict) -> dict:
         """Processes a row of data loaded from the CSV file. Validates that the row has the expected fields and formats.
         Raises ValueError if the row is invalid."""
 
@@ -81,7 +81,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return row
 
-    def update(self, name, quantity) -> bool:
+    def update(self, name: str, quantity: str) -> bool:
         """Sets an ingredient's quantity to the given value (replaces, does not add).
         Returns True if the ingredient existed and was updated."""
         name = str(name).strip().lower()

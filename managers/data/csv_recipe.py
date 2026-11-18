@@ -6,7 +6,8 @@ from managers.logic import RoutingDecision, Outcome
 
 class CsvRecipeRepository(CsvRepository, RecipeRepository):
     """A CSV-based implementation of the RecipeRepository interface."""
-    def __init__(self, filepath, fieldnames, logger=None):
+
+    def __init__(self, filepath: str, fieldnames: list, logger=None):
         super().__init__(filepath, fieldnames, mode="a", logger=logger)
 
     def save(self, recipe: RoutingDecision | dict) -> bool:
@@ -37,14 +38,14 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
         """Returns all recipes with outcome 'accept' as a list of RoutingDecision objects."""
         return self.query(lambda r: r.outcome == Outcome.ACCEPT)
 
-    def find_by_ingredient(self, name) -> list[RoutingDecision]:
+    def find_by_ingredient(self, name: str) -> list[RoutingDecision]:
         """Returns all recipes that include the given ingredient (case-insensitive)."""
         name = name.strip().lower()
         return self.query(
             lambda r: any(name in str(i).strip().lower() for i in r.ingredients)
         )
 
-    def _process_data_row(self, row) -> RoutingDecision:
+    def _process_data_row(self, row: dict) -> RoutingDecision:
         """Processes a single row of data loaded from the CSV file."""
         # Convert JSON strings back to lists
         row["score"] = float(row.get("score", 0.0))
@@ -53,7 +54,7 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
 
         return self._row_to_routing_decision(row)
 
-    def _row_to_routing_decision(self, row) -> RoutingDecision:
+    def _row_to_routing_decision(self, row: dict) -> RoutingDecision:
         """Converts a CSV row to a RoutingDecision object."""
         return RoutingDecision(
             recipe=row.get("recipe", "Unknown Recipe"),

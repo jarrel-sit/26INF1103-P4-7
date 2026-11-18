@@ -7,6 +7,7 @@ from managers.logic import RoutingDecision, Outcome
 # --- Classes --- #
 class MongoRecipeRepository(MongoRepository, RecipeRepository):
     """Recipe repository that stores data in a MongoDB collection."""
+
     def __init__(self, uri, db_name, logger=None):
         super().__init__(uri, db_name, "recipes", logger=logger)
 
@@ -45,7 +46,7 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
             lambda r: any(name in str(i).strip().lower() for i in r.ingredients)
         )
 
-    def _process_document(self, document) -> RoutingDecision:
+    def _process_document(self, document: dict) -> RoutingDecision:
         """Turns a stored document into a recipe record."""
         return RoutingDecision(
             recipe=document.get("recipe", "Unknown Recipe"),

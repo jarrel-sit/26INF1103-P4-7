@@ -31,7 +31,7 @@ class CsvRepository(Repository):
                 f"[Data Manager] Error: could not create data file '{self.__filepath}' ({error})."
             )
 
-    def save(self, data) -> bool:
+    def save(self, data: dict) -> bool:
         """Saves one record to the CSV file. Returns True if the save succeeded."""
         # Handles creation of new file if it does not exist
         if not os.path.exists(self.__filepath):
@@ -125,12 +125,12 @@ class CsvRepository(Repository):
 
         return records
 
-    def _log(self, message) -> None:
+    def _log(self, message: str) -> None:
         """Logs a message if a logger is provided."""
         if self.__logger:
             self.__logger(message)
 
-    def query(self, filter_fn) -> list:
+    def query(self, filter_fn: function) -> list:
         """
         Accepts a filter function and returns all matching records.
         Example: query(lambda r: r["outcome"] == "accept")
@@ -138,8 +138,9 @@ class CsvRepository(Repository):
         return [record for record in self.load() if filter_fn(record)]
 
     @abstractmethod
-    def _process_data_row(self, row) -> dict:
+    def _process_data_row(self, row: dict) -> dict:
         """Process a single row of data. This method should be implemented by subclasses to handle specific data formats.
         Args:
-            row (dict): A dictionary representing a single row of data from the CSV file."""
+            row (dict): A dictionary representing a single row of data from the CSV file.
+        """
         pass

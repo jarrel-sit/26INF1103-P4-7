@@ -9,14 +9,14 @@ from .ingredient_repo import IngredientRepository
 class MongoIngredientRepository(MongoRepository, IngredientRepository):
     """Ingredient repository that stores data in a MongoDB collection."""
 
-    def __init__(self, uri, db_name, logger=None):
+    def __init__(self, uri: str, db_name: str, logger=None):
         super().__init__(uri, db_name, "ingredients", logger=logger)
 
     def find_all(self) -> dict:
         """Returns {ingredient: quantity} for everything saved."""
         return {row["ingredient"]: row["quantity"] for row in self.load()}
 
-    def save(self, ingredients) -> bool:
+    def save(self, ingredients: dict) -> bool:
         """Adds new ingredients and adds up quantities of existing ones."""
         if not ingredients:
             return False
@@ -44,7 +44,7 @@ class MongoIngredientRepository(MongoRepository, IngredientRepository):
 
         return True
 
-    def delete(self, name) -> bool:
+    def delete(self, name: str) -> bool:
         """Deletes the ingredient with the given name. Returns True if one was deleted."""
         name = str(name).strip().lower()
 
@@ -56,7 +56,7 @@ class MongoIngredientRepository(MongoRepository, IngredientRepository):
 
         return result.deleted_count > 0
 
-    def update(self, name, quantity) -> bool:
+    def update(self, name: str, quantity: str) -> bool:
         """Sets an ingredient's quantity to the given value (replaces, does not add).
         Returns True if the ingredient existed and was updated."""
         name = str(name).strip().lower()
@@ -73,7 +73,7 @@ class MongoIngredientRepository(MongoRepository, IngredientRepository):
 
         return result.matched_count > 0
 
-    def _process_document(self, document) -> dict:
+    def _process_document(self, document: dict) -> dict:
         """Turns a stored document into an ingredient record."""
         return {
             "ingredient": document["_id"],
