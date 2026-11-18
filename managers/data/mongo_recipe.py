@@ -9,14 +9,21 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
     def __init__(self, uri, db_name, logger=None):
         super().__init__(uri, db_name, "recipes", logger=logger)
 
-    def save(self, recipe):
+    def save(self, recipe: RoutingDecision | dict) -> bool:
         """Inserts one evaluated recipe. Returns True if the save succeeded."""
-        if not recipe or not isinstance(recipe, dict):
+        if not recipe or not isinstance(recipe, (RoutingDecision, dict)):
             return False
+
+        if isinstance(recipe, RoutingDecision):
+            recipe = recipe.to_dict()
+
+        outcome = recipe.get("outcome", "unknown")
+        if isinstance(outcome, Outcome):
+            outcome = outcome.value          # store the plain string
 
         document = {
             "recipe": recipe.get("recipe", "Unknown Recipe"),
-            "outcome": recipe.get("outcome", "unknown"),
+            "outcome": outcome,
             "score": recipe.get("score", 0.0),
             "reason": recipe.get("reason", ""),
             "ingredients": recipe.get("ingredients", {}),
