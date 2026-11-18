@@ -7,16 +7,17 @@ from managers.logic import RoutingDecision
 class CLIDisplay(Display):
     """Concrete implementation of the Display abstract base class for command-line interface (CLI) output."""
 
-    def display_logs(self, log: str):
+    def display_logs(self, log: str) -> None:
         """Outputs verbose log messages."""
         print(f"{log}")
 
-    # Displays error messages when recieiving input from user
-    def display_error(self, msg):
+    def display_error(self, msg: str) -> None:
+        """Outputs error messages."""
         print(f"[ERROR]: {msg}")
 
     # Displays list of ingredients
-    def display_ingredients(self, ingredients):
+    def display_ingredients(self, ingredients: dict) -> None:
+        """Displays the current list of available ingredients."""
         if not ingredients:
             print("No ingredients have been added yet.")
             return
@@ -26,7 +27,8 @@ class CLIDisplay(Display):
             print(f"- {key}: {value}")
 
     # Displays recipe
-    def display_result(self, result: RoutingDecision):
+    def display_result(self, result: RoutingDecision) -> None:
+        """Displays the details of a generated recipe, including its outcome, score, reason, ingredients, and instructions."""
         data = (
             result.to_dict()
         )  # Convert RoutingDecision to a dictionary for easier access
@@ -67,10 +69,12 @@ class CLIDisplay(Display):
         print("=" * 55)
 
     # Displays menu formatting
-    def display_menu(self, message):
+    def display_menu(self, message: str) -> None:
+        """Displays a formatted menu message."""
         print(message)
 
-    def display_recipe_list(self, recipes: list[RoutingDecision]):
+    def display_recipe_list(self, recipes: list[RoutingDecision]) -> None:
+        """Displays a list of past recipes with their outcomes and scores."""
         if not recipes:
             print("No recipes found.")
             return
@@ -85,6 +89,7 @@ class CLIDisplay(Display):
             )
 
     def display_used_ingredients(self, used_ingredients: list[str]) -> None:
+        """Displays a list of used ingredients for filtering past recipes."""
         print("\nFilter Past Recipes by Ingredient:")
         for idx, name in enumerate(used_ingredients, start=1):
             print(f"  {idx}. {name}")

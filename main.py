@@ -71,8 +71,7 @@ class Application:
     def run(self) -> None:
         """Executes the main interactive CLI loop."""
         while True:
-            self._menu.display_menu_text()
-            choice = int(self._menu.get_choice())
+            choice = int(self._menu.execute())
 
             if choice == 1:
                 self._handle_add_ingredients()
@@ -153,8 +152,7 @@ class Application:
     def _handle_view_past_recipes(self) -> None:
         """Handles the past recipes submenu loop."""
         while True:
-            self._recipe_menu.display_menu_text()
-            sub_choice = int(self._recipe_menu.get_choice())
+            sub_choice = int(self._recipe_menu.execute())
 
             if sub_choice == 1:
                 recipes = self._service.get_all_recipes()

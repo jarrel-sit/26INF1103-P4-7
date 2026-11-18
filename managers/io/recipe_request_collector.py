@@ -6,6 +6,7 @@ from models import RecipeRequest
 
 # Collects all the inputs needed for the recipe
 class RecipeRequestCollector:
+    """Collects user inputs for recipe generation, including dietary restrictions, allergies, and ingredients."""
     def __init__(
         self,
         validator: RecipeRequestValidator,
@@ -22,6 +23,7 @@ class RecipeRequestCollector:
     def collect_input(
         self, available_ingredients: list[str] = None
     ) -> RecipeRequest | None:
+        """Collects dietary restrictions, allergies, and ingredients from the user."""
         diet = self._collect_diet()
         allergy = self._collect_allergy()
 
@@ -40,7 +42,8 @@ class RecipeRequestCollector:
         )
 
     # Recieves input for diet
-    def _collect_diet(self):
+    def _collect_diet(self) -> list[str]:
+        """Collects dietary restrictions from the user."""
         self.user_diet = []
         self._display.display_logs("\nList of known diets")
         for i in self.dietlist:
@@ -62,7 +65,8 @@ class RecipeRequestCollector:
                 self.user_diet.append(diet)
 
     # Recieves input for allergy
-    def _collect_allergy(self):
+    def _collect_allergy(self) -> list[str]:
+        """Collects allergy information from the user."""
         self.user_allergies = []
         self._display.display_logs("\nList of known allergies")
         for i in self.allergylist:
@@ -85,7 +89,8 @@ class RecipeRequestCollector:
                 self.user_allergies.append(allergy)
 
     # Recieves input for ingredients
-    def collect_ingredients(self, available_ingredients: list[str] = None):
+    def collect_ingredients(self, available_ingredients: list[str] = None) -> dict[str, str]:
+        """Collects ingredient information from the user."""
         self.user_ingredients = {}
         while True:
             ingredient = (

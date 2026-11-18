@@ -8,12 +8,15 @@ class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
     def __init__(self, displayer: Display):
+        # Regex patterns for validating ingredient input formats
         self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+(?:\.\d+)?)\s*(g|ml)"
         self.quantity_pattern = r"(\d+(?:\.\d+)?)\s*(g|ml)"
+
         self._display = displayer
 
     # Validation for diet
-    def validate_diet(self, diet, dietlist):
+    def validate_diet(self, diet: str, dietlist: list) -> bool:
+        """Validates the dietary restriction input by the user."""
         if diet in dietlist:
             self._display.display_logs(
                 f"Taken note of {diet} dietary restriction, we will ensure that generated recipes adhere to {diet} dietary restrictions."
@@ -29,7 +32,9 @@ class RecipeRequestValidator:
             return False
 
     # Validation for allergy
-    def validate_allergy(self, allergy, allergylist):
+    def validate_allergy(self, allergy: str, allergylist: list) -> bool:
+        """Validates the allergy input by the user."""
+
         if allergy in allergylist:
             log = f"Taken note of {allergy} allergy, we will not include {allergy} in your generated recipes"
             self._display.display_logs(log)
@@ -40,7 +45,9 @@ class RecipeRequestValidator:
             self._display.display_error(log)
 
     # Validation for ingredients
-    def validate_ingredients(self, ingredient, available_ingredients=None):
+    def validate_ingredients(self, ingredient: str, available_ingredients=None) -> dict[str, str] | None:
+        """Validates the ingredient input by the user."""
+
         match = re.match(self.input_pattern, ingredient)
         if match and re.search(r"[^\w\s.]", ingredient) is None:
             name = match.group(1)
@@ -68,7 +75,7 @@ class RecipeRequestValidator:
             log = "Invalid item detected. Please ensure that ingredient entered follows the proper format."
             self._display.display_error(log)
 
-    def validate_quantity(self, ingredient, quantity, unit, available_ingredients):
+    def validate_quantity(self, ingredient: str, quantity: str, unit: str, available_ingredients: dict[str, str]) -> bool:
         """Validates the quantity of the ingredient input by the user."""
         if ingredient in available_ingredients:
             match = re.match(self.quantity_pattern, available_ingredients[ingredient])

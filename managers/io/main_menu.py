@@ -7,10 +7,12 @@ import re
 
 # --- Classes --- #
 class MainMenu(Menu):
+    """Handles the main menu display and user interactions."""
     def __init__(self, validator: MenuValidator, displayer: Display):
         super().__init__(choices=8, validator=validator, displayer=displayer)
 
-    def display_menu_text(self):
+    def display_menu_text(self) -> None:
+        """Displays the main menu options to the user."""
         self._displayer.display_menu(
             """
 =================================
@@ -53,7 +55,7 @@ class MainMenu(Menu):
         self.choices = original_choice  # Restore original choices
         return output
 
-    def select_to_update(self, available: dict):
+    def select_to_update(self, available: dict) -> tuple[str | None, str | None]:
         """Returns (name, quantity), or (None, None) if cancelled or invalid."""
         name = input(
             "Enter the ingredient name to update (leave empty to cancel): "

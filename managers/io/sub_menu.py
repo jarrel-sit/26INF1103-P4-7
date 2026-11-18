@@ -7,10 +7,12 @@ from managers.logic import RoutingDecision
 
 # --- Classes --- #
 class SubMenu(Menu):
+    """Handles the past recipes submenu display and user interactions."""
     def __init__(self, validator: MenuValidator, displayer: Display):
         super().__init__(choices=4, validator=validator, displayer=displayer)
 
-    def display_menu_text(self):
+    def display_menu_text(self) -> None:
+        """Displays the past recipes submenu options to the user."""
         self._displayer.display_menu("""
 =================================
 |      Past Recipes Submenu     |
