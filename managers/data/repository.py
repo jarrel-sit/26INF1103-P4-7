@@ -7,17 +7,17 @@ class Repository(ABC):
     """Abstract base class for a repository that manages data storage and retrieval."""
 
     @abstractmethod
-    def save(self, data):
+    def save(self, data) -> bool:
         """Save new data to the repository."""
         pass
 
     @abstractmethod
-    def load(self):
+    def load(self) -> list:
         """Load all records from the repository."""
         pass
 
     @abstractmethod
-    def query(self, filter_fn):
+    def query(self, filter_fn) -> list:
         """
         Accepts a filter function and returns all matching records.
         Example: query(lambda r: r["outcome"] == "accept")

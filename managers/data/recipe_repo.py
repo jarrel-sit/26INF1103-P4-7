@@ -8,13 +8,13 @@ class RecipeRepository(Repository):
     """Contract for storing and querying evaluated recipes."""
 
     @abstractmethod
-    def find_all(self):
+    def find_all(self) -> list:
         pass
 
     @abstractmethod
-    def find_successful(self):
+    def find_successful(self) -> list:
         pass
 
     @abstractmethod
-    def find_by_ingredient(self, name):
+    def find_by_ingredient(self, name) -> list:
         pass

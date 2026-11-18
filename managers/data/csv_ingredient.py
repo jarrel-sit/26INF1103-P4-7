@@ -1,5 +1,4 @@
 # --- Imports --- #
-import re
 from datetime import datetime
 from .csv_repository import CsvRepository
 from .ingredient_repo import IngredientRepository
@@ -7,10 +6,12 @@ from .ingredient_repo import IngredientRepository
 
 # --- Classes --- #
 class CsvIngredientRepository(CsvRepository, IngredientRepository):
+    """Ingredient repository that stores data in a CSV file."""
+
     def __init__(self, filepath, fieldnames, logger=None):
         super().__init__(filepath, fieldnames, mode="w", logger=logger)
 
-    def __next_session_id(self, rows):
+    def __next_session_id(self, rows) -> int:
         """Next session_id, based on rows already loaded."""
         ids = []
         for row in rows:
@@ -20,13 +21,12 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
                 continue
         return max(ids, default=0) + 1
 
-
-    def find_all(self):
+    def find_all(self) -> dict:
         """Returns {ingredient: quantity} for everything saved."""
         rows = self.load()
         return {row["ingredient"]: row["quantity"] for row in rows}
 
-    def save(self, ingredients):
+    def save(self, ingredients) -> bool:
         """Adds new ingredients and adds up quantities of existing ones."""
         if not ingredients:
             return False
@@ -40,9 +40,6 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
             name = str(name).strip().lower()
 
             if name in existing:
-                # Add the new quantity to the existing quantity;
-                # TODO: what if user wants to replace instead of add?
-                # Maybe add a flag to indicate this.
                 existing[name]["quantity"] = self.add_quantities(
                     existing[name]["quantity"], quantity
                 )
@@ -60,12 +57,12 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return super().save(rows)
 
-    def __filter_exclude_ingredient(self, name):
+    def __filter_exclude_ingredient(self, name) -> list:
         """Returns all rows except those with the given ingredient name using query()."""
         name = str(name).strip().lower()
         return self.query(lambda r: str(r["ingredient"]).strip().lower() != name)
 
-    def delete(self, name):
+    def delete(self, name) -> bool:
         """Deletes all rows with the given ingredient name. Returns True if any rows were deleted."""
         remaining = self.__filter_exclude_ingredient(name)
 
@@ -75,7 +72,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return super().save(remaining)
 
-    def _process_data_row(self, row):
+    def _process_data_row(self, row) -> dict:
         """Processes a row of data loaded from the CSV file. Validates that the row has the expected fields and formats.
         Raises ValueError if the row is invalid."""
 
@@ -84,7 +81,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
 
         return row
 
-    def update(self, name, quantity):
+    def update(self, name, quantity) -> bool:
         """Sets an ingredient's quantity to the given value (replaces, does not add).
         Returns True if the ingredient existed and was updated."""
         name = str(name).strip().lower()

@@ -17,12 +17,12 @@ class MongoRepository(Repository):
             collection_name
         ]
 
-    def _log(self, message):
+    def _log(self, message) -> None:
         """Logs a message if a logger is provided."""
         if self.__logger:
             self.__logger(message)
 
-    def save(self, data):
+    def save(self, data) -> bool:
         """Inserts one document. Returns True if the save succeeded."""
         try:
             self._collection.insert_one(data)
@@ -32,7 +32,7 @@ class MongoRepository(Repository):
 
         return True
 
-    def load(self):
+    def load(self) -> list:
         """Loads all documents, converted by _process_document."""
         try:
             documents = list(self._collection.find())
@@ -53,11 +53,11 @@ class MongoRepository(Repository):
         self._log(f"[Data Manager] Loaded {len(records)} record(s) from database.")
         return records
 
-    def query(self, filter_fn):
+    def query(self, filter_fn) -> list:
         """Returns all records for which filter_fn(record) is True."""
         return [record for record in self.load() if filter_fn(record)]
 
     @abstractmethod
-    def _process_document(self, document):
+    def _process_document(self, document) -> object:
         """Converts one stored document into a record. Implemented by subclasses."""
         pass

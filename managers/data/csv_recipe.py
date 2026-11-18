@@ -5,6 +5,7 @@ from managers.logic import RoutingDecision, Outcome
 
 
 class CsvRecipeRepository(CsvRepository, RecipeRepository):
+    """A CSV-based implementation of the RecipeRepository interface."""
     def __init__(self, filepath, fieldnames, logger=None):
         super().__init__(filepath, fieldnames, mode="a", logger=logger)
 
@@ -28,19 +29,22 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
 
         return super().save(row)
 
-    def find_all(self):
+    def find_all(self) -> list[RoutingDecision]:
+        """Returns all recipes as a list of RoutingDecision objects."""
         return self.load()
 
-    def find_successful(self):
+    def find_successful(self) -> list[RoutingDecision]:
+        """Returns all recipes with outcome 'accept' as a list of RoutingDecision objects."""
         return self.query(lambda r: r.outcome == Outcome.ACCEPT)
 
-    def find_by_ingredient(self, name):
+    def find_by_ingredient(self, name) -> list[RoutingDecision]:
+        """Returns all recipes that include the given ingredient (case-insensitive)."""
         name = name.strip().lower()
         return self.query(
             lambda r: any(name in str(i).strip().lower() for i in r.ingredients)
         )
 
-    def _process_data_row(self, row):
+    def _process_data_row(self, row) -> RoutingDecision:
         """Processes a single row of data loaded from the CSV file."""
         # Convert JSON strings back to lists
         row["score"] = float(row.get("score", 0.0))
@@ -49,7 +53,7 @@ class CsvRecipeRepository(CsvRepository, RecipeRepository):
 
         return self._row_to_routing_decision(row)
 
-    def _row_to_routing_decision(self, row):
+    def _row_to_routing_decision(self, row) -> RoutingDecision:
         """Converts a CSV row to a RoutingDecision object."""
         return RoutingDecision(
             recipe=row.get("recipe", "Unknown Recipe"),

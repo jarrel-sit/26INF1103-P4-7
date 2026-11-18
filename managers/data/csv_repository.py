@@ -19,7 +19,7 @@ class CsvRepository(Repository):
         self.__reader = csv.DictReader
         self.__writer = csv.DictWriter
 
-    def _create_empty_file(self):
+    def _create_empty_file(self) -> None:
         """Creates an empty CSV file with the specified fieldnames."""
         try:
             with open(self.__filepath, mode="w", newline="", encoding="utf-8") as file:
@@ -31,7 +31,8 @@ class CsvRepository(Repository):
                 f"[Data Manager] Error: could not create data file '{self.__filepath}' ({error})."
             )
 
-    def save(self, data):
+    def save(self, data) -> bool:
+        """Saves one record to the CSV file. Returns True if the save succeeded."""
         # Handles creation of new file if it does not exist
         if not os.path.exists(self.__filepath):
             self._create_empty_file()
@@ -58,7 +59,7 @@ class CsvRepository(Repository):
 
         return True
 
-    def load(self):
+    def load(self) -> list:
         """
         Loads all saved records from the CSV spreadsheet specified.
         """
@@ -124,12 +125,12 @@ class CsvRepository(Repository):
 
         return records
 
-    def _log(self, message):
+    def _log(self, message) -> None:
         """Logs a message if a logger is provided."""
         if self.__logger:
             self.__logger(message)
 
-    def query(self, filter_fn):
+    def query(self, filter_fn) -> list:
         """
         Accepts a filter function and returns all matching records.
         Example: query(lambda r: r["outcome"] == "accept")
@@ -137,7 +138,7 @@ class CsvRepository(Repository):
         return [record for record in self.load() if filter_fn(record)]
 
     @abstractmethod
-    def _process_data_row(self, row):
+    def _process_data_row(self, row) -> dict:
         """Process a single row of data. This method should be implemented by subclasses to handle specific data formats.
         Args:
             row (dict): A dictionary representing a single row of data from the CSV file."""
