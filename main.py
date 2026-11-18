@@ -85,8 +85,10 @@ class Application:
             elif choice == 5:
                 self._handle_delete_ingredient()
             elif choice == 6:
-                self._handle_edit_settings()
+                self._handle_update_ingredient()
             elif choice == 7:
+                self._handle_edit_settings()
+            elif choice == 8:
                 self.__display.display_logs("Exiting application. Goodbye!")
                 break
 
@@ -100,6 +102,24 @@ class Application:
             self.__display.display_logs("Ingredients saved successfully.")
         else:
             self.__display.display_error("Failed to save ingredients.")
+
+    def _handle_update_ingredient(self) -> None:
+        available = self._ingredients.find_all()
+        if not available:
+            self.__display.display_logs("No ingredients available to update.")
+            return
+
+        self.__display.display_ingredients(available)
+        name, quantity = self._menu.select_to_update(available)
+
+        if not name:
+            self.__display.display_logs("Update cancelled.")
+            return
+
+        if self._ingredients.update(name, quantity):
+            self.__display.display_logs(f"Updated '{name}' to {quantity}.")
+        else:
+            self.__display.display_error(f"Ingredient '{name}' not found.")
 
     def _handle_list_ingredients(self) -> None:
         available = self._ingredients.find_all()
