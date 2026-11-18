@@ -54,6 +54,23 @@ class MongoIngredientRepository(MongoRepository, IngredientRepository):
 
         return result.deleted_count > 0
 
+    def update(self, name, quantity):
+        """Sets an ingredient's quantity to the given value (replaces, does not add).
+        Returns True if the ingredient existed and was updated."""
+        name = str(name).strip().lower()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        try:
+            result = self._collection.update_one(
+                {"_id": name},
+                {"$set": {"quantity": quantity, "updated": timestamp}},
+            )
+        except PyMongoError as error:
+            self._log(f"[Data Manager] Database error: {error}")
+            return False
+
+        return result.matched_count > 0
+
     def _process_document(self, document):
         """Turns a stored document into an ingredient record."""
         return {
