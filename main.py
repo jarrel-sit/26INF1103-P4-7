@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from services import RecipeService
 from managers.data import (
     MongoIngredientRepository,
-    CsvRecipeRepository,
     MongoRecipeRepository,
 )
 
@@ -14,8 +13,6 @@ from managers.logic import LogicManager, RoutingDecision
 from managers.data import (
     RecipeRepository,
     IngredientRepository,
-    CsvRecipeRepository,
-    CsvIngredientRepository,
 )
 
 from managers.io import (
@@ -234,7 +231,6 @@ if __name__ == "__main__":
     # --- Variables & Constants --- #
     ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
     ingredients = ingredient_repo.find_all()
-    # recipe_repo = data_manager.CsvRecipeRepository(logger=logger)
     recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner", logger=display.display_error)
     recipes = recipe_repo.find_all()
 

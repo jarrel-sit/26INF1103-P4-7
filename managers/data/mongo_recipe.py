@@ -19,7 +19,7 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
 
         outcome = recipe.get("outcome", "unknown")
         if isinstance(outcome, Outcome):
-            outcome = outcome.value          # store the plain string
+            outcome = outcome.value  # store the plain string
 
         document = {
             "recipe": recipe.get("recipe", "Unknown Recipe"),
@@ -35,26 +35,14 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
     def find_all(self):
         return self.load()
 
-    # def find_successful(self):
-    #     return self.query(lambda r: r.get("outcome") == "accept")
-
     def find_successful(self):
         return self.query(lambda r: r.outcome == Outcome.ACCEPT)
-
-    # def find_by_ingredient(self, name):
-    #     name = name.strip().lower()
-    #     return self.query(
-    #         lambda r: any(
-    #             name in str(i).strip().lower() for i in r.get("ingredients", {})
-    #         )
-    #     )
 
     def find_by_ingredient(self, name):
         name = name.strip().lower()
         return self.query(
             lambda r: any(name in str(i).strip().lower() for i in r.ingredients)
         )
-    
 
     def _process_document(self, document):
         """Turns a stored document into a recipe record."""
