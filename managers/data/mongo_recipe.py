@@ -1,6 +1,7 @@
 # --- Imports --- #
 from .mongo_repository import MongoRepository
 from .recipe_repo import RecipeRepository
+from managers.logic import RoutingDecision, Outcome
 
 
 # --- Classes --- #
@@ -40,11 +41,11 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
 
     def _process_document(self, document):
         """Turns a stored document into a recipe record."""
-        return {
-            "recipe": document["recipe"],
-            "outcome": document["outcome"],
-            "score": float(document.get("score", 0.0)),
-            "reason": document.get("reason", ""),
-            "ingredients": document.get("ingredients", {}),
-            "instructions": document.get("instructions", {}),
-        }
+        return RoutingDecision(
+            recipe=document.get("recipe", "Unknown Recipe"),
+            outcome=Outcome(document.get("outcome", "unknown")),
+            reason=document.get("reason", ""),
+            score=float(document.get("score", 0.0)),
+            ingredients=document.get("ingredients", "[]"),
+            instructions=document.get("instructions", "[]"),
+        )
