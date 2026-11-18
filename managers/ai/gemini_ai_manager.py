@@ -1,6 +1,6 @@
 # --- Imports --- #
 import time, json, re
-from models import RecipeRequest, AIResult, GeneratedRecipe, Instruction
+from models import RecipeRequest, AIResult, GeneratedRecipe
 from .base_ai_manager import BaseAIManager
 from .gemini_client import GeminiClient
 from .recipe_validator import RecipeValidator
@@ -8,6 +8,8 @@ from .recipe_validator import RecipeValidator
 
 # --- Classes --- #
 class GeminiAIManager(BaseAIManager):
+    """Manager for handling recipe requests using the Gemini AI API. It builds prompts, calls the API, and validates responses."""
+
     def __init__(
         self, client: GeminiClient, validator: RecipeValidator, max_retries: int = 3
     ):
@@ -25,25 +27,32 @@ class GeminiAIManager(BaseAIManager):
             "insufficient_ingredients": "bool",
         }
 
+        # Regular expression pattern to match fenced code blocks with optional 'json' language specifier
         self._FENCE_PATTERN = re.compile(
             r"```(?:json)?\s*(\{.*\})\s*```",
             re.DOTALL | re.IGNORECASE,
         )
 
     def process(self, request: RecipeRequest) -> AIResult:
+        """Processes a recipe request by building a prompt, calling the Gemini API, and validating the response."""
         prompt = self._build_prompt(request)
         raw_response = self.call_api(prompt)
 
-        if isinstance(raw_response, str) and raw_response.startswith("Transport or connection exception"):
+        # Handle transport or connection exceptions
+        if isinstance(raw_response, str) and raw_response.startswith(
+            "Transport or connection exception"
+        ):
             return AIResult(success=False, error_message=raw_response)
 
         parsed = self._parse_response(raw_response)
 
+        # Handle parsing errors or invalid JSON
         if isinstance(parsed, str):
             return AIResult(success=False, error_message=parsed)
 
         parsed_validation = self._validator.validate_raw(parsed)
 
+        # Handle validation errors for missing or incorrect fields in the parsed response
         if not parsed_validation.is_valid:
             return AIResult(
                 success=False, error_message=", ".join(parsed_validation.errors)
@@ -110,6 +119,7 @@ class GeminiAIManager(BaseAIManager):
         return prompt
 
     def call_api(self, prompt: str, delay: int = 2) -> str:
+        """Function to call the Gemini API with retries and exponential backoff."""
         # Retries the API calls, only fail if all tries unsuccessful
         for attempt in range(1, self._max_retries + 1):
             try:
@@ -126,6 +136,7 @@ class GeminiAIManager(BaseAIManager):
                 return f"Transport or connection exception: {e}"
 
     def _extract_json_text(self, raw: str) -> str:
+        """Function to extract JSON text from the raw API response, handling fenced code blocks and extra text."""
         cleaned = raw.strip()
 
         # Extract from ```json ... ``` or ``` ... ``` (case-insensitive)
@@ -148,9 +159,7 @@ class GeminiAIManager(BaseAIManager):
         return cleaned
 
     def _parse_response(self, raw: str) -> dict | str:
-        """
-        Function to parse the response from the API.
-        """
+        """Function to parse the response from the API."""
         if not raw:
             return "No response received from the API."
 

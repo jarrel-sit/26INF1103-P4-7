@@ -5,6 +5,7 @@ from .ai_client import AIClient
 
 # --- Classes --- #
 class GeminiClient(AIClient):
+    """Client for interacting with the Gemini AI API. It handles API calls and response streaming."""
     def __init__(self, api_key: str, model: str = "gemini-3.1-flash-lite"):
         self._client = genai.Client(api_key=api_key)
         self._model = model
@@ -19,6 +20,7 @@ class GeminiClient(AIClient):
             stream=True,  # Enable streaming to receive partial responses as they are generated
         )
 
+        # Process the streamed events from the API
         for event in interaction:
             # Check for error events
             if hasattr(event, "error") and event.error:

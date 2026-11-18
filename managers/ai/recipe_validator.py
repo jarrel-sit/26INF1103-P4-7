@@ -5,8 +5,9 @@ from models import GeneratedRecipe, Instruction, ValidationResult
 
 # --- Classes --- #
 class RecipeValidator:
+    """Validator for ensuring the structure and content of generated recipes are correct."""
     def validate_raw(self, data: dict) -> ValidationResult:
-        """Validate parsed JSON structure and construct a GeneratedRecipe."""
+        """Validates the raw data structure of the generated recipe."""
         errors: list[str] = []
 
         if not isinstance(data, dict):
@@ -33,6 +34,7 @@ class RecipeValidator:
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)
 
     def validate_fields(self, response: GeneratedRecipe) -> ValidationResult:
+        """Validates the fields of a GeneratedRecipe object to ensure they meet expected types and constraints."""
         errors: list[str] = []
 
         if not isinstance(response.recipe, str) or not response.recipe.strip():
