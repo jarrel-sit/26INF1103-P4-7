@@ -276,31 +276,31 @@ def _next_session_id(filepath):
     return max(ids, default=0) + 1
 
 
-def save_recipe(
-    recipe, filepath=DEFAULT_RECIPES_FILEPATH, fieldnames=RECIPE_FIELDNAMES, logger=None
-):
-    """
-    Appends a fully evaluated recipe (from logic_manager) to persistent storage.
-    Returns True if save succeeded, False otherwise.
-    """
-    if not recipe or not isinstance(recipe, dict):
-        return False
+# def save_recipe(
+#     recipe, filepath=DEFAULT_RECIPES_FILEPATH, fieldnames=RECIPE_FIELDNAMES, logger=None
+# ):
+#     """
+#     Appends a fully evaluated recipe (from logic_manager) to persistent storage.
+#     Returns True if save succeeded, False otherwise.
+#     """
+#     if not recipe or not isinstance(recipe, dict):
+#         return False
 
-    formatted_recipe = {
-        "recipe": recipe.get("recipe", "Unknown Recipe"),
-        "outcome": recipe.get("outcome", "unknown"),
-        "score": recipe.get("score", 0.0),
-        "reason": recipe.get("reason", ""),
-        "ingredients": json.dumps(recipe.get("ingredients", [])),
-        "instructions": json.dumps(recipe.get("instructions", [])),
-    }
+#     formatted_recipe = {
+#         "recipe": recipe.get("recipe", "Unknown Recipe"),
+#         "outcome": recipe.get("outcome", "unknown"),
+#         "score": recipe.get("score", 0.0),
+#         "reason": recipe.get("reason", ""),
+#         "ingredients": json.dumps(recipe.get("ingredients", [])),
+#         "instructions": json.dumps(recipe.get("instructions", [])),
+#     }
 
-    success = save(filepath, fieldnames, formatted_recipe, mode="a", logger=logger)
+#     success = save(filepath, fieldnames, formatted_recipe, mode="a", logger=logger)
 
-    if success and logger:
-        logger(f"[Data Manager] Saved recipes to '{filepath}'.")
+#     if success and logger:
+#         logger(f"[Data Manager] Saved recipes to '{filepath}'.")
 
-    return success
+#     return success
 
 
 # ---------------------------------------------------------------------------
@@ -308,25 +308,25 @@ def save_recipe(
 # ---------------------------------------------------------------------------
 
 
-def filter_by_ingredient(records, ingredient_name):
-    """Returns all rows matching a given ingredient name (case-insensitive)."""
-    ingredient_name = ingredient_name.strip().lower()
+# def filter_by_ingredient(records, ingredient_name):
+#     """Returns all rows matching a given ingredient name (case-insensitive)."""
+#     ingredient_name = ingredient_name.strip().lower()
 
-    def matches(record):
-        ingredients = record.get("ingredients")
+#     def matches(record):
+#         ingredients = record.get("ingredients")
 
-        for name in ingredients:
-            if ingredient_name in str(name).strip().lower():
-                return True
+#         for name in ingredients:
+#             if ingredient_name in str(name).strip().lower():
+#                 return True
 
-        return False
+#         return False
 
-    return query(matches, records)
+#     return query(matches, records)
 
 
-def filter_by_success(records):
-    """Returns all matching recipe rows with successful evaluation via business rules."""
-    return query(lambda record: record.get("outcome") == "accept", records)
+# def filter_by_success(records):
+#     """Returns all matching recipe rows with successful evaluation via business rules."""
+#     return query(lambda record: record.get("outcome") == "accept", records)
 
 
 def query(filter_fn, records):

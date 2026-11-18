@@ -20,17 +20,6 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
                 continue
         return max(ids, default=0) + 1
 
-    @staticmethod
-    def __add_quantities(old, new):
-        """'100g' + '100g' -> '200g'. If the units differ, the new quantity replaces the old."""
-        old_match = re.match(r"^(\d+(?:\.\d+)?)([a-zA-Z]*)$", str(old).strip())
-        new_match = re.match(r"^(\d+(?:\.\d+)?)([a-zA-Z]*)$", str(new).strip())
-
-        if old_match and new_match and old_match.group(2) == new_match.group(2):
-            total = float(old_match.group(1)) + float(new_match.group(1))
-            return f"{total:g}{new_match.group(2)}"
-
-        return new
 
     def find_all(self):
         """Returns {ingredient: quantity} for everything saved."""
@@ -54,7 +43,7 @@ class CsvIngredientRepository(CsvRepository, IngredientRepository):
                 # Add the new quantity to the existing quantity;
                 # TODO: what if user wants to replace instead of add?
                 # Maybe add a flag to indicate this.
-                existing[name]["quantity"] = self.__add_quantities(
+                existing[name]["quantity"] = self.add_quantities(
                     existing[name]["quantity"], quantity
                 )
                 existing[name]["timestamp"] = timestamp
