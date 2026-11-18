@@ -3,7 +3,6 @@ from datetime import datetime
 from pymongo.errors import PyMongoError
 from .mongo_repository import MongoRepository
 from .ingredient_repo import IngredientRepository
-from .quantity import add_quantities
 
 
 # --- Classes --- #
@@ -28,7 +27,7 @@ class MongoIngredientRepository(MongoRepository, IngredientRepository):
                 existing = self._collection.find_one({"_id": name})
 
                 if existing:
-                    quantity = add_quantities(existing["quantity"], quantity)
+                    quantity = self.add_quantities(existing["quantity"], quantity)
 
                 # upsert: insert if the ingredient is new, otherwise update it
                 self._collection.update_one(
