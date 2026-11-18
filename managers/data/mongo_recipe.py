@@ -41,12 +41,18 @@ class MongoRecipeRepository(MongoRepository, RecipeRepository):
     def find_successful(self):
         return self.query(lambda r: r.outcome == Outcome.ACCEPT)
 
+    # def find_by_ingredient(self, name):
+    #     name = name.strip().lower()
+    #     return self.query(
+    #         lambda r: any(
+    #             name in str(i).strip().lower() for i in r.get("ingredients", {})
+    #         )
+    #     )
+
     def find_by_ingredient(self, name):
         name = name.strip().lower()
         return self.query(
-            lambda r: any(
-                name in str(i).strip().lower() for i in r.get("ingredients", {})
-            )
+            lambda r: any(name in str(i).strip().lower() for i in r.ingredients)
         )
     
 
