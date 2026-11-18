@@ -16,6 +16,10 @@ class IngredientRepository(Repository):
     def delete(self, name):
         pass
 
+    @abstractmethod
+    def update(self, name, quantity):   
+        pass
+
     @staticmethod
     def add_quantities(old, new):
         """'100g' + '100g' -> '200g'. If the units differ, the new quantity replaces the old."""
