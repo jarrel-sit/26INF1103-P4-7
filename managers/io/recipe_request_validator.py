@@ -1,16 +1,16 @@
 # --- Imports --- #
 import re
-from .cli_display import CLIDisplay
+from .cli_display import Display
 
 
 # --- Classes --- #
 class RecipeRequestValidator:
     """Validates all the inputs needed for the recipe"""
 
-    def __init__(self):
+    def __init__(self, displayer: Display):
         self.input_pattern = r"([A-Za-z]+(?:\s[A-Za-z]+)*)\s*(\d+(?:\.\d+)?)\s*(g|ml)"
         self.quantity_pattern = r"(\d+(?:\.\d+)?)\s*(g|ml)"
-        self._display = CLIDisplay()
+        self._display = displayer
 
     # Validation for diet
     def validate_diet(self, diet, dietlist):
