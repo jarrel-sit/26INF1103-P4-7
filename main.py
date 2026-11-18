@@ -41,7 +41,7 @@ class Application:
         # Composition: Application owns and manages UI and service lifecycles
         self.__display = CLIDisplay()
         self.__menu_validator = MenuValidator()
-        self.__recipe_validator = RecipeRequestValidator()
+        self.__recipe_validator = RecipeRequestValidator(self.__display)
 
         self._menu: MainMenu = MainMenu(self.__menu_validator, self.__display)
         self._recipe_menu: SubMenu = SubMenu(self.__menu_validator, self.__display)
@@ -151,7 +151,7 @@ class Application:
                     self.__display.display_logs("No past recipes found.")
 
                 else:
-                    self.__display.display_recipe_list(recipes)
+                    self.__display.display_recipe_list(recipes) 
                     self._view_selected_recipe_details(recipes)
 
             elif sub_choice == 2:
@@ -236,10 +236,10 @@ if __name__ == "__main__":
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 
     # --- Variables & Constants --- #
-    ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner", logger=logger)
+    ingredient_repo = MongoIngredientRepository(MONGO_URI, "recipe_planner")
     ingredients = ingredient_repo.find_all()
     # recipe_repo = data_manager.CsvRecipeRepository(logger=logger)
-    recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner", logger=logger)
+    recipe_repo = MongoRecipeRepository(MONGO_URI, "recipe_planner")
     recipes = recipe_repo.find_all()
 
     app = Application(
